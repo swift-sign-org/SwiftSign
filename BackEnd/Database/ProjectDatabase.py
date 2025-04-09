@@ -2,14 +2,8 @@
 # This file is only for creating the database and the tables, we will not use it in the project.
 
 # Import the necessary libraries
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
-
-# Create the Flask application and configure the database
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///SwiftSignDB.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+from app import app
 
 
 # Initialize the SQLAlchemy object
@@ -60,5 +54,6 @@ class Student(db.Model):
 
 
 
-with app.app_context():
-    db.create_all()
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()

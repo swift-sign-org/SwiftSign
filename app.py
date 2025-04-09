@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from BackEnd.API import api_bp
 from BackEnd.routes import routes_bp
-from BackEnd.database import db
+from BackEnd.Database.ProjectDatabase import db
 import os
 from flask_migrate import Migrate
 from dotenv import load_dotenv
