@@ -1,11 +1,13 @@
+import os
+
 from flask import Flask
-from flask_cors import CORS
+from dotenv import load_dotenv
+from flask_session import Session
+from flask_migrate import Migrate
+
 from BackEnd.API import api_bp
 from BackEnd.routes import routes_bp
 from BackEnd.Database.ProjectDatabase import db
-import os
-from flask_migrate import Migrate
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -20,7 +22,8 @@ db.init_app(app=app)
 
 app.register_blueprint(api_bp, url_prefix='/')
 app.register_blueprint(routes_bp, url_prefix='/')
-CORS(app)
+
+Session(app)
 
 migrate = Migrate(app=app, db=db)  
 
