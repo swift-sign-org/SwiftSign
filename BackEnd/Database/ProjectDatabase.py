@@ -21,6 +21,9 @@ class Teacher(db.Model):
     # Relationship to Subject
     subjects = db.relationship('Subject', backref='teacher', cascade='all, delete', passive_deletes=True)
 
+    def check_password(self, password):
+        return self.TeacherPassword == password
+
 # Define the Class table
 class Class(db.Model):
     ClassID = db.Column(db.Integer, primary_key=True, nullable=False)
