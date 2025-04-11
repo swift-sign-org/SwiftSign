@@ -31,6 +31,22 @@ def updateEntityById(
             print(f"No {model.__name__} found with ID {entityId}.")
 
 
+# Delete an entity from the database by its ID
+def deleteEntity(
+        modelClass,
+        entityId,
+        idFieldName
+):
+    with app.app_context():
+        entity = modelClass.query.filter(getattr(modelClass, idFieldName) == entityId).first()
+        if entity:
+            db.session.delete(entity)
+            db.session.commit()
+            print(f"✅ {modelClass.__name__} with {idFieldName}={entityId} deleted successfully.")
+        else:
+            print(f"❌ No {modelClass.__name__} found with {idFieldName}={entityId}.")
+
+
 
 
 
