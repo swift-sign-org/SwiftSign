@@ -17,17 +17,15 @@
     /* Global Styles */
     body {
       background: linear-gradient(to right, #eef2f3, #8e9eab);
-      color: #333;
       font-family: 'Segoe UI', sans-serif;
       padding: 60px 0;
       transition: background 0.3s, color 0.3s;
     }
 
     body.dark-mode {
-      background: #121212;
+      background: linear-gradient(to right, #383939, #000000);
       color: #fff;
     }
-
     .title-icon {
       font-size: 1.8rem;
       color: #0d6efd;
@@ -41,14 +39,18 @@
       border-radius: 20px;
       border: none;
       background: #ffffff;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 25px ;
       transition: background 0.3s, box-shadow 0.3s;
     }
 
-    body.dark-mode .card {
+    body.dark-mode .card{
+      color: white;
       background: #1f1f1f;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 25px ;
+      
     }
+
+
 
     .form-label {
       font-weight: 600;
@@ -91,9 +93,10 @@
       color: #fff;
     }
 
+
     #darkModeToggle {
       margin-top: 20px;
-      border-radius: 25px;
+      border-radius: 5px;
       padding: 10px 20px;
       font-weight: 600;
       font-size: 1rem;
@@ -103,6 +106,7 @@
       background-color: #333;
       color: #fff;
     }
+
 
     .tooltip-warning {
       background-color: #fff3cd;
@@ -129,7 +133,7 @@
       background-color: #2a2a2a;
     }
 
-    body.dark-mode h3{
+    body.dark-mode p {
       color: #ffffff;
     }
 
@@ -140,13 +144,13 @@
 </head>
 <body>
     <div id="app">
-      <div class="container">
+      
         <div class="card">
           <div class="text-center mb-4">
             <i class="bi bi-calendar-check-fill title-icon"></i>
             
             <h3 class="d-inline align-middle">Smart Attendance Portal</h3>
-            <p class="text-muted mb-0">Fill in the session details below to begin</p>
+            <p class="mb-0">Fill in the session details below to begin</p>
           </div>
   
           <form @submit.prevent>
@@ -204,7 +208,6 @@
             </button>
           </div>
         </div>
-      </div>
     </div>
   
     <!-- Vue Script -->
@@ -223,10 +226,23 @@
             report: false
           };
         },
+        created() {
+        // Check if a dark mode preference is saved
+        const savedMode = localStorage.getItem("darkMode");
+        if (savedMode === "true") {
+          this.isDarkMode = true;
+          document.body.classList.add("dark-mode");
+        }
+      },
         methods: {
           toggleDarkMode() {
             this.isDarkMode = !this.isDarkMode;
+          // Save the current mode
+          localStorage.setItem("darkMode", this.isDarkMode);
+
             // Add or remove dark mode class from the body element
+
+
             if (this.isDarkMode) {
               document.body.classList.add('dark-mode');
             } else {
