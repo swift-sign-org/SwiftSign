@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teacher Attendance Page</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3"></script>
+
+  <!-- Styles -->
+  <style>
+    /* Global Styles */
+    body {
+      background: linear-gradient(to right, #eef2f3, #8e9eab);
+      color: #333;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 60px 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+      background: #121212;
+      color: #fff;
+    }
+
+    .title-icon {
+      font-size: 1.8rem;
+      color: #0d6efd;
+      margin-right: 8px;
+    }
+
+    .card {
+      max-width: 600px;
+      margin: auto;
+      padding: 40px 30px;
+      border-radius: 20px;
+      border: none;
+      background: #ffffff;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    body.dark-mode .card {
+      background: #1f1f1f;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    body.dark-mode .form-label {
+      color: #ddd;
+    }
+
+    .form-control {
+      border-radius: 10px;
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    body.dark-mode .form-control {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #444;
+    }
+
+    body.dark-mode .form-control::placeholder {
+      color: #aaa;
+    }
+
+    .btn-custom {
+      border-radius: 30px;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      background-color: #0dcaf0;
+      color: #fff;
+      border: none;
+    }
+
+    body.dark-mode .btn-custom {
+      background-color: #0dcaf0;
+      color: #fff;
+    }
+
+    #darkModeToggle {
+      margin-top: 20px;
+      border-radius: 25px;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    body.dark-mode #darkModeToggle {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .tooltip-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    body.dark-mode .tooltip-warning {
+      background-color: #5f4b00;
+      color: #fff8dc;
+    }
+
+    .report-box {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    body.dark-mode .report-box {
+      background-color: #2a2a2a;
+    }
+
+    body.dark-mode h3{
+      color: #ffffff;
+    }
+
+    
+
+
+  </style>
+</head>
+<body>
+    <div id="app">
+      <div class="container">
+        <div class="card">
+          <div class="text-center mb-4">
+            <i class="bi bi-calendar-check-fill title-icon"></i>
+            
+            <h3 class="d-inline align-middle">Smart Attendance Portal</h3>
+            <p class="text-muted mb-0">Fill in the session details below to begin</p>
+          </div>
+  
+          <form @submit.prevent>
+            <!-- Module Name -->
+            <div class="mb-3">
+              <label for="module" class="form-label">📘 Module Name</label>
+              <input type="text" class="form-control" id="module" v-model="module" placeholder="e.g. Artificial Intelligence">
+            </div>
+  
+            <!-- Time Selection -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="startTime" class="form-label">⏰ Start Time</label>
+                <input type="time" class="form-control" id="startTime" v-model="startTime">
+              </div>
+              <div class="col-md-6">
+                <label for="endTime" class="form-label">⏳ End Time</label>
+                <input type="time" class="form-control" id="endTime" v-model="endTime">
+              </div>
+            </div>
+  
+            <!-- Tooltip Note -->
+            <div class="tooltip-warning">
+              ⚠️ Avoid 13:00–14:00 (Lunch Break). Late sessions may cause access issues.
+            </div>
+  
+            <!-- Date Picker -->
+            <div class="mb-4">
+              <label for="classDate" class="form-label">📅 Class Date</label>
+              <input type="date" class="form-control" id="classDate" v-model="classDate">
+            </div>
+  
+            <!-- Buttons -->
+            <div class="d-grid gap-2 mb-2">
+              <button type="button" class="btn btn-primary btn-custom" @click="startAttendance">
+                <i class="bi bi-play-circle-fill me-2"></i>Start Attendance
+              </button>
+              <button type="button" class="btn btn-success btn-custom" @click="getReport">
+                <i class="bi bi-bar-chart-fill me-2"></i>Get Attendance Report
+              </button>
+            </div>
+          </form>
+  
+          <!-- Attendance Report -->
+          <div class="report-box" v-if="report">
+            <h5>📊 Attendance Report</h5>
+            <p><strong>✅ Present Students:</strong> Alice, Bob</p>
+            <p><strong>❌ Connection Issues:</strong> Charlie - WiFi error</p>
+          </div>
+  
+          <!-- Dark Mode Toggle -->
+          <div class="text-center mt-4">
+            <button id="darkModeToggle" class="btn btn-secondary" @click="toggleDarkMode">
+              {{ isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Vue Script -->
+    <script src="https://unpkg.com/vue@3"></script>
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            module: '',
+            startTime: '',
+            endTime: '',
+            classDate: '',
+            isDarkMode: false,
+            report: false
+          };
+        },
+        methods: {
+          toggleDarkMode() {
+            this.isDarkMode = !this.isDarkMode;
+            // Add or remove dark mode class from the body element
+            if (this.isDarkMode) {
+              document.body.classList.add('dark-mode');
+            } else {
+              document.body.classList.remove('dark-mode');
+            }
+          },
+          startAttendance() {
+            alert(`Starting attendance for: ${this.module} on ${this.classDate}`);
+          },
+          getReport() {
+            this.report = true;
+          }
+        }
+      }).mount('#app');
+    </script>
+</body>
+</html>
