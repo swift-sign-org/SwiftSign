@@ -38,9 +38,9 @@
     }
 
     .profile-pic {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
+      width: 300px;
+      height: 300px;
+      border-radius:5px;
       object-fit: cover;
       margin-bottom: 15px;
     }
@@ -76,12 +76,17 @@
   <div id="app">
     <div class="container">
       <div class="card">
-        <img src="https://via.placeholder.com/120" alt="Profile Picture" class="profile-pic">
+
+        <video id="video" width="320" height="240" autoplay style="margin-top: 15px; display: none; border-radius: 10px;"></video>
+        <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>        
+
+        <img v-if="!isCameraActive" :src="profileImage" alt="Profile Picture" class="profile-pic">
         <h2 class="mt-2">John Doe</h2>
         <p>ID: 12345678</p>
 
         <button class="camera-btn mt-3" @click="recordAttendance">
-          <i class="bi bi-camera-fill"></i> Record Attendance
+          <i class="bi" :class="isCameraActive ? 'bi-camera' : 'bi-camera-fill'"></i>
+          {{ isCameraActive ? 'Take Picture' : 'Record Attendance' }}
         </button>
 
         <div id="status" class="record-status mt-3" v-show="showStatus">
@@ -103,8 +108,11 @@
       data() {
         return {
           isDarkMode: false,
-          showStatus: false
-        };
+          showStatus: false,
+          isCameraActive: false,
+          stream: null,
+          profileImage: "https://via.placeholder.com/120"
+                };
       },
       created() {
         // Check if a dark mode preference is saved
@@ -114,20 +122,56 @@
           document.body.classList.add("dark-mode");
         }},
         methods: {
-        toggleDarkMode() {
-          this.isDarkMode = !this.isDarkMode;
-  
-          // Save the current mode
-          localStorage.setItem("darkMode", this.isDarkMode);
-  
-          // Toggle the class on body
-          if (this.isDarkMode) {
-            document.body.classList.add("dark-mode");
-          } else {
-            document.body.classList.remove("dark-mode");
-          }
-        }
-      }
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    localStorage.setItem("darkMode", this.isDarkMode);
+    document.body.classList.toggle("dark-mode", this.isDarkMode);
+  },
+
+  recordAttendance() {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  const profilePic = document.querySelector('.profile-pic');
+
+  // Step 1: Start camera
+  if (!this.isCameraActive) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        this.stream = stream;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        this.isCameraActive = true;
+      })
+      .catch((err) => {
+        console.error("Error accessing webcam: ", err);
+        alert("Could not access the webcam.");
+      });
+  }
+  // Step 2: Take picture
+  else {
+    context.drawImage(video, 0, 0, 320, 240);
+    const imageDataURL = canvas.toDataURL('image/png');
+    this.profileImage = imageDataURL;
+
+    // Show status
+    this.showStatus = true;
+
+    // Stop camera
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+    }
+    video.style.display = 'none';
+    this.isCameraActive = false;
+
+    // Hide status after a few seconds
+    setTimeout(() => {
+      this.showStatus = false;
+    }, 3000);
+  }
+}
+
+  }
     });
   </script>
 </body>
