@@ -42,7 +42,6 @@
       color: #ffffff;
       background: #1f1f1f;
       box-shadow: 0 10px 25px ;
-
     }
 
     .form-label {
@@ -124,7 +123,6 @@
       background-color: #2a2a2a;
     }
 
-
   </style>
 </head>
 <body>
@@ -137,17 +135,17 @@
           <p class=" mb-0">Please log in below to access the portal</p>
         </div>
 
-        <form @submit.prevent>
-          <!-- Username -->
+        <form @submit.prevent="login">
+          <!-- Email -->
           <div class="mb-3">
-            <label for="username" class="form-label">📘 Username</label>
-            <input type="text" class="form-control" id="username" placeholder="Enter your username">
+            <label for="email" class="form-label">📧 Email</label>
+            <input type="email" class="form-control" id="email" placeholder="Enter your email" v-model="email" required>
           </div>
 
           <!-- Password -->
           <div class="mb-3">
             <label for="password" class="form-label">🔑 Password</label>
-            <input type="password" class="form-control" id="password" placeholder="Enter your password">
+            <input type="password" class="form-control" id="password" placeholder="Enter your password" v-model="password" required>
           </div>
 
           <!-- Login Button -->
@@ -155,6 +153,16 @@
             <button type="submit" class="btn btn-primary btn-custom">
               <i class="bi bi-box-arrow-in-right me-2"></i>Login
             </button>
+          </div>
+
+          <!-- Success Message -->
+          <div class="alert alert-success" v-if="loginSuccess">
+            ✅ {{ successMessage }}
+          </div>
+
+          <!-- Error Message -->
+          <div class="alert alert-danger" v-if="loginError">
+            ❌ {{ errorMessage }}
           </div>
 
           <!-- Dark Mode Toggle -->
@@ -175,7 +183,13 @@
       el: "#app",
       data() {
         return {
-          isDarkMode: false
+          email: '',
+          password: '',
+          isDarkMode: false,
+          loginError: false,
+          errorMessage: '',
+          loginSuccess: false,
+          successMessage: ''
         };
       },
       created() {
@@ -189,19 +203,82 @@
       methods: {
         toggleDarkMode() {
           this.isDarkMode = !this.isDarkMode;
-  
           // Save the current mode
           localStorage.setItem("darkMode", this.isDarkMode);
-  
           // Toggle the class on body
           if (this.isDarkMode) {
             document.body.classList.add("dark-mode");
           } else {
             document.body.classList.remove("dark-mode");
           }
+        },
+        isInstitutionalEmail(email) {
+          const requiredDomain = "@hns-re2sd.dz";
+          return typeof email === "string" && email.trim().toLowerCase().endsWith(requiredDomain);
+        },
+
+
+
+
+        async login() {
+          if (!this.isInstitutionalEmail(this.email)) {
+            this.showError("Email must end with @hns-re2sd.dz");
+            return;
+          }
+
+
+
+
+          if (!this.email || !this.password) {
+            this.showError("Please enter both email and password.");
+            return;
+          }
+
+        
+
+          // Send login request to API
+          try {
+            const response = await fetch("/api/teacher_login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: this.email,
+                password: this.password
+              })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+              this.loginSuccess = true;
+              this.successMessage = data.message || "Login Successful!";
+              this.loginError = false;
+              // Reset form after successful login
+              this.email = '';
+              this.password = '';
+              setTimeout(() => {
+                this.loginSuccess = false;
+              }, 3000);
+            } else {
+              this.showError(data.message || "Login failed.");
+            }
+          } catch (error) {
+            console.error("Fetch error:", error);
+            this.showError("Failed to connect to the server.");
+          }
+        },
+        showError(message) {
+          this.loginError = true;
+          this.errorMessage = message;
+          this.loginSuccess = false;
+          setTimeout(() => {
+            this.loginError = false;
+            this.errorMessage = '';
+          }, 3000);
         }
       }
     });
-  </script>
+  </script>  
 </body>
 </html>
