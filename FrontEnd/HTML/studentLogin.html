@@ -88,7 +88,7 @@
                  :disabled="isSubmitting">
         </div>
 
-        <button class="login-btn" @click="login" :disabled="isSubmitting">
+        <button class="login-btn" @click="Login" :disabled="isSubmitting">
           <i class="bi bi-box-arrow-in-right"></i> 
           {{ isSubmitting ? 'Processing...' : 'Login' }}
         </button>
@@ -173,6 +173,7 @@
               this.loginSuccess = true;
               this.successMessage = data.message || 'Login Successful!';
               this.email = '';
+              window.location.href = "https://www.facebook.com"
               setTimeout(() => {
                 this.loginSuccess = false;
                 // Add redirect logic here if needed
