@@ -10,7 +10,8 @@ def insertTeacher(
         teacherLastName,
         teacherEmail,
         teacherBirthDate,
-        teacherPhone
+        teacherPhone,
+        teacherPassword
 ):
     if not teacherEmail.endswith("@hns-re2sd.dz"):
         print("❌ Error: This is not an HNS Account.")
@@ -29,7 +30,8 @@ def insertTeacher(
         TeacherLastName=teacherLastName,
         TeacherEmail=teacherEmail,
         TeacherBirthDate=teacherBirthDate,
-        TeacherPhone=teacherPhone
+        TeacherPhone=teacherPhone,
+        TeacherPassword=teacherPassword
     )
 
     # Use a session to add and commit
@@ -112,7 +114,8 @@ def deleteTeacherById(teacherId):
 #     teacherLastName="Doe",
 #     teacherEmail="a.aa@hns-re2sd.dz",
 #     teacherBirthDate="1990-01-01",
-#     teacherPhone="1234567890"
+#     teacherPhone="1234567890",
+#     teacherPassword="password123"
 # )
 
 # updateTeacherById(2, TeacherEmail="b.b@hns-re2sd.dz")
