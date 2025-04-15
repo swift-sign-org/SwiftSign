@@ -1,6 +1,5 @@
 from flask import blueprints, jsonify, session, request
 
-from app import app
 from BackEnd.Database.ProjectDatabase import Teacher, Class, Subject, Student ,db
 
 api_bp = blueprints.Blueprint('api', __name__)

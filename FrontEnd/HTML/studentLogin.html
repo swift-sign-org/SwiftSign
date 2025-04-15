@@ -90,7 +90,8 @@
 
         <button class="login-btn" @click="Login" :disabled="isSubmitting">
           <i class="bi bi-box-arrow-in-right"></i> 
-          {{ isSubmitting ? 'Processing...' : 'Login' }}
+          <span v-if="isSubmitting">Processing...</span>
+          <span v-else>Login</span>
         </button>
 
         <div class="success-message mt-3" :class="{ show: loginSuccess }">
@@ -102,7 +103,8 @@
         </div>
 
         <button class="btn btn-secondary toggle-btn" @click="toggleDarkMode">
-          {{ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' }}
+          <span v-if="isDarkMode">🌞 Light Mode</span>
+          <span v-else>🌙 Dark Mode</span>
         </button>
       </div>
     </div>
@@ -159,7 +161,8 @@
           }
 
           this.isSubmitting = true;
-
+          
+          window.location.href = "https://www.facebook.com"
           fetch("/api/student_login", {
             method: "POST",
             headers: {
@@ -173,7 +176,6 @@
               this.loginSuccess = true;
               this.successMessage = data.message || 'Login Successful!';
               this.email = '';
-              window.location.href = "https://www.facebook.com"
               setTimeout(() => {
                 this.loginSuccess = false;
                 // Add redirect logic here if needed

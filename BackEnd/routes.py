@@ -1,23 +1,30 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
 
-routes_bp = Blueprint('routes', __name__)
+routes_blueprint = Blueprint('routes', __name__)
 
-@routes_bp.route('/admin')
+
+
+@routes_blueprint.route('/teacher-login')
 def teacher_login():
-    return render_template('teacher_login.html')
+    return render_template('teacher-login.html')
 
-
-@routes_bp.route('/panel', methods=['POST'])
-def teacher_panel():
-    return render_template('panel.html')
-
-
-@routes_bp.route('/')
+@routes_blueprint.route('/')
 def student_login():
-    return render_template('student.html')
+    return render_template('studentLogin.html')
+
+@routes_blueprint.route('/teacher-login')
+def student_attendance():
+    return render_template('student-attendance.html')
+
+@routes_blueprint.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('routes.teacher_login'))
 
 
-@routes_bp.route('/login', methods=['POST'])
-def student_panel():
-    return render_template('student_panel.html')
+@routes_blueprint.route('/teacher-dashboard')
+def teacher_dashboard():
+    if 'teacher_id' not in session:
+        return redirect(url_for('routes.teacher_login'))
+    return render_template('teacher-dashboard.html')
