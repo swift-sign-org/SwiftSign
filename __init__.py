@@ -61,5 +61,5 @@ def register_blueprints(app):
     from BackEnd.API import api_bp
     from BackEnd.routes import routes_blueprint
     
-    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(api_bp)
     app.register_blueprint(routes_blueprint)
