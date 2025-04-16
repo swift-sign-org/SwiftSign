@@ -72,6 +72,55 @@
     .success-message.show {
       display: block;
     }
+
+    .error-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #fff;
+      border-left: 4px solid #dc3545;
+      border-radius: 4px;
+      padding: 15px 20px;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1050;
+      max-width: 350px;
+      transform: translateX(400px);
+      transition: transform 0.3s ease-out;
+    }
+
+    .error-popup.show {
+      transform: translateX(0);
+    }
+
+    body.dark-mode .error-popup {
+      background-color: #2d2d2d;
+      color: white;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .error-popup .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    .error-popup .close-btn:hover {
+      opacity: 1;
+    }
+
+    .error-popup-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #dc3545;
+    }
+
+    .error-popup-title i {
+      margin-right: 8px;
+    }
   </style>
 </head>
 <body>
@@ -108,45 +157,71 @@
         </button>
       </div>
     </div>
+    
+    <!-- Error Popup -->
+    <div class="error-popup" :class="{ show: loginError }">
+      <div class="close-btn" @click="loginError = false">&times;</div>
+      <div class="error-popup-title">
+        <i class="bi bi-exclamation-triangle-fill"></i> Error
+      </div>
+      <div>{{ errorMessage }}</div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
   <script>
+    // Initialize the Vue application
     new Vue({
       el: '#loginApp',
+      
+      // Application data and state management
       data() {
         return {
-          email: '',
-          loginSuccess: false,
-          loginError: false,
-          successMessage: 'Login Successful!',
-          errorMessage: '',
-          isDarkMode: false,
-          isSubmitting: false
+          email: '',                  // User's email input
+          loginSuccess: false,        // Flag for successful login
+          loginError: false,          // Flag for error display
+          successMessage: 'Login Successful!', // Success notification text
+          errorMessage: '',           // Error message content
+          isDarkMode: false,          // Current theme setting
+          isSubmitting: false,        // Form submission state
+          redirectUrl: "/attendance"  // Redirect location after successful login
         };
       },
+      
+      // Lifecycle hook - runs when Vue instance is created
       created() {
+        // Restore dark mode preference from local storage
         const savedMode = localStorage.getItem("darkMode");
         this.isDarkMode = savedMode === "true";
         document.body.classList.toggle("dark-mode", this.isDarkMode);
       },
+      
       methods: {
+        // Display error messages in popup
         showError(message) {
           this.loginError = true;
           this.errorMessage = message;
           this.loginSuccess = false;
+          
+          // Auto-hide error after 5 seconds
           setTimeout(() => {
             this.loginError = false;
-          }, 3000);
+          }, 5000);
         },
+        
+        // Toggle between dark and light themes
         toggleDarkMode() {
           this.isDarkMode = !this.isDarkMode;
           localStorage.setItem("darkMode", this.isDarkMode);
           document.body.classList.toggle("dark-mode", this.isDarkMode);
         },
-        login() {
+        
+        // Handle login form submission
+        async login() {
+          // Prevent duplicate submissions
           if (this.isSubmitting) return;
 
+          // Validate email format
           const emailTrimmed = this.email.trim();
           const domain = "@hns-re2sd.dz";
 
@@ -160,37 +235,47 @@
             return;
           }
 
+          // Process login request
           this.isSubmitting = true;
           
-          window.location.href = "https://www.facebook.com"
-          fetch("/api/student_login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email: emailTrimmed })
-          })
-          .then(async response => {
+          try {
+            // Send login API request
+            const response = await fetch("/api/student_login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ email: emailTrimmed })
+            });
+            
             const data = await response.json();
+            
+            // Handle successful response
             if (response.ok) {
               this.loginSuccess = true;
               this.successMessage = data.message || 'Login Successful!';
               this.email = '';
-              window.location.href = "https://www.facebook.com"
+              
+              // Redirect after showing success message
               setTimeout(() => {
                 this.loginSuccess = false;
-              }, 3000);
-            } else {
+                window.location.href = this.redirectUrl;
+              }, 1200);
+            } 
+            // Handle error response
+            else {
               this.showError(data.message || "Login failed.");
             }
-          })
-          .catch(error => {
+          } 
+          // Handle network/connection errors
+          catch (error) {
             console.error("Fetch error:", error);
             this.showError("Failed to connect to the server.");
-          })
-          .finally(() => {
+          } 
+          // Always reset submission status
+          finally {
             this.isSubmitting = false;
-          });
+          }
         }
       }
     });

@@ -92,7 +92,7 @@
 
         <button class="camera-btn mt-3" @click="recordAttendance">
           <i class="bi" :class="isCameraActive ? 'bi-camera' : 'bi-camera-fill'"></i>
-          {{ isCameraActive ? 'Take Picture' : 'Record Attendance' }}
+          [[ isCameraActive ? 'Take Picture' : 'Record Attendance' ]]
         </button>
 
         <div id="status" class="record-status mt-3" v-show="showStatus">
@@ -100,7 +100,7 @@
         </div>
 
         <button class="btn btn-secondary toggle-btn" @click="toggleDarkMode">
-          {{ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' }}
+          [[ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' ]]
         </button>
       </div>
     </div>
@@ -111,6 +111,7 @@
   <script>
     new Vue({
       el: '#app',
+      delimiters: ['[[', ']]'], // Change Vue delimiters to avoid conflict with Jinja
       data() {
         return {
           isDarkMode: false,
