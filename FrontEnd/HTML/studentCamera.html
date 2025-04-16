@@ -45,13 +45,37 @@
       margin-bottom: 15px;
     }
 
-    .camera-btn {
+    .camera-btn, .submit-btn, .retake-btn {
       font-size: 1.5rem;
-      background-color: #0dcaf0;
       color: white;
       border-radius: 50px;
       padding: 10px 20px;
       border: none;
+      margin-top: 10px;
+    }
+    
+    .camera-btn {
+      background-color: #0dcaf0;
+    }
+
+    .submit-btn {
+      background-color: #20c997;
+    }
+    
+    .retake-btn {
+      background-color: #fd7e14;
+      margin-left: 10px;
+    }
+
+    .submit-btn:disabled, .retake-btn:disabled {
+      opacity: 0.7;
+    }
+
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
     }
 
     .record-status {
@@ -68,14 +92,61 @@
       margin-top: 20px;
     }
     video {
-  transform: scaleX(-1); /* Flip video horizontally */
+      transform: scaleX(-1); /* Flip video horizontally */
     }
 
     img {
-  transform: scaleX(-1); /* Flip video horizontally */
+      transform: scaleX(-1); /* Flip video horizontally */
     }
 
+    .error-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #fff;
+      border-left: 4px solid #dc3545;
+      border-radius: 4px;
+      padding: 15px 20px;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1050;
+      max-width: 350px;
+      transform: translateX(400px);
+      transition: transform 0.3s ease-out;
+    }
 
+    .error-popup.show {
+      transform: translateX(0);
+    }
+
+    body.dark-mode .error-popup {
+      background-color: #2d2d2d;
+      color: white;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .error-popup .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    .error-popup .close-btn:hover {
+      opacity: 1;
+    }
+
+    .error-popup-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #dc3545;
+    }
+
+    .error-popup-title i {
+      margin-right: 8px;
+    }
   </style>
 </head>
 <body>
@@ -90,19 +161,40 @@
         <h2 class="mt-2">John Doe</h2>
         <p>ID: 12345678</p>
 
-        <button class="camera-btn mt-3" @click="recordAttendance">
+        <button class="camera-btn mt-3" @click="toggleCamera" v-if="!photoTaken || isCameraActive">
           <i class="bi" :class="isCameraActive ? 'bi-camera' : 'bi-camera-fill'"></i>
-          [[ isCameraActive ? 'Take Picture' : 'Record Attendance' ]]
+          [[ isCameraActive ? 'Take Picture' : 'Start Camera' ]]
         </button>
 
+        <div class="buttons-container" v-if="photoTaken && !isCameraActive">
+          <button class="submit-btn" @click="submitAttendance" :disabled="isSubmitting">
+            <i class="bi bi-send"></i>
+            [[ isSubmitting ? 'Sending...' : 'Submit Attendance' ]]
+          </button>
+          
+          <button class="retake-btn" @click="retakePhoto" :disabled="isSubmitting">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Retake
+          </button>
+        </div>
+
         <div id="status" class="record-status mt-3" v-show="showStatus">
-          ✅ Recorded Successfully!
+          ✅ [[ statusMessage ]]
         </div>
 
         <button class="btn btn-secondary toggle-btn" @click="toggleDarkMode">
           [[ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' ]]
         </button>
       </div>
+    </div>
+    
+    <!-- Error Popup -->
+    <div class="error-popup" :class="{ show: showError }">
+      <div class="close-btn" @click="showError = false">&times;</div>
+      <div class="error-popup-title">
+        <i class="bi bi-exclamation-triangle-fill"></i> Error
+      </div>
+      <div>[[ errorMessage ]]</div>
     </div>
   </div>
 
@@ -117,9 +209,14 @@
           isDarkMode: false,
           showStatus: false,
           isCameraActive: false,
+          photoTaken: false,
           stream: null,
-          profileImage: "https://via.placeholder.com/120"
-                };
+          profileImage: "https://via.placeholder.com/120",
+          isSubmitting: false,
+          showError: false,
+          errorMessage: '',
+          statusMessage: 'Photo captured successfully!'
+        };
       },
       created() {
         // Check if a dark mode preference is saved
@@ -127,57 +224,116 @@
         if (savedMode === "true") {
           this.isDarkMode = true;
           document.body.classList.add("dark-mode");
-        }},
-        methods: {
-  toggleDarkMode() {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem("darkMode", this.isDarkMode);
-    document.body.classList.toggle("dark-mode", this.isDarkMode);
-  },
+        }
+      },
+      methods: {
+        toggleDarkMode() {
+          this.isDarkMode = !this.isDarkMode;
+          localStorage.setItem("darkMode", this.isDarkMode);
+          document.body.classList.toggle("dark-mode", this.isDarkMode);
+        },
 
-  recordAttendance() {
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const context = canvas.getContext('2d');
-  const profilePic = document.querySelector('.profile-pic');
+        showErrorMessage(message) {
+          this.errorMessage = message;
+          this.showError = true;
+          
+          // Auto-hide error after 5 seconds
+          setTimeout(() => {
+            this.showError = false;
+          }, 5000);
+        },
 
-  // Step 1: Start camera
-  if (!this.isCameraActive) {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-    .then((stream) => {
-        this.stream = stream;
-        video.srcObject = stream;
-        video.style.display = 'block';
-        this.isCameraActive = true;
-      })
-      .catch((err) => {
-        console.error("Error accessing webcam: ", err);
-        alert("Could not access the webcam.");
-      });
-  }
-  // Step 2: Take picture
-  else {
-    context.drawImage(video, 0, 0, 320, 240);
-    const imageDataURL = canvas.toDataURL('image/png');
-    this.profileImage = imageDataURL;
+        toggleCamera() {
+          const video = document.getElementById('video');
+          const canvas = document.getElementById('canvas');
+          const context = canvas.getContext('2d');
 
-    // Show status
-    this.showStatus = true;
+          // Start camera
+          if (!this.isCameraActive) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then((stream) => {
+                this.stream = stream;
+                video.srcObject = stream;
+                video.style.display = 'block';
+                this.isCameraActive = true;
+              })
+              .catch((err) => {
+                console.error("Error accessing webcam: ", err);
+                this.showErrorMessage("Could not access the webcam. Please check your camera permissions.");
+              });
+          }
+          // Take picture
+          else {
+            context.drawImage(video, 0, 0, 320, 240);
+            const imageDataURL = canvas.toDataURL('image/png');
+            this.profileImage = imageDataURL;
+            this.photoTaken = true;
 
-    // Stop camera
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-    }
-    video.style.display = 'none';
-    this.isCameraActive = false;
+            // Show status
+            this.statusMessage = "Photo captured successfully!";
+            this.showStatus = true;
 
-    // Hide status after a few seconds
-    setTimeout(() => {
-      this.showStatus = false;
-    }, 3000);
-  }
-}
-  }
+            // Stop camera
+            if (this.stream) {
+              this.stream.getTracks().forEach(track => track.stop());
+            }
+            video.style.display = 'none';
+            this.isCameraActive = false;
+
+            // Hide status after a few seconds
+            setTimeout(() => {
+              this.showStatus = false;
+            }, 3000);
+          }
+        },
+        
+        retakePhoto() {
+          // Reset photo state and activate camera again
+          this.photoTaken = false;
+          this.showStatus = false;
+          
+          // Start camera again
+          this.toggleCamera();
+        },
+
+        async submitAttendance() {
+          if (this.isSubmitting) return;
+          
+          this.isSubmitting = true;
+          
+          try {
+            const response = await fetch("/api/attendanceRecord", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                student_photo: this.profileImage,
+                attendance_status: "present"
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+              this.statusMessage = data.message || "Attendance recorded successfully!";
+              this.showStatus = true;
+              this.photoTaken = false; // Reset for next attendance if needed
+              
+              setTimeout(() => {
+                this.showStatus = false;
+              }, 3000);
+            } else {
+              this.showErrorMessage(data.message || "Failed to record attendance.");
+            }
+          } catch (error) {
+            console.error("Fetch error:", error);
+            this.showErrorMessage("Failed to connect to the server.");
+          } finally {
+            this.isSubmitting = false;
+          }
+        }
+      }
     });
   </script>
 </body>
