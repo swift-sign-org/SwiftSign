@@ -1,32 +1,49 @@
-import cv2
-import os
-from deepface import DeepFace as Dp
 import time
+from deepface import DeepFace as Dp
+import os
+import cv2
 
 
-class test_context:
-    def __enter__(self):
-        # Initialize resources or setup
-        print("Entering context")
-        self.start_time = time.time()
-        return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print("Exiting context")
-        end_time = time.time()
-        print(f"Time taken: {end_time - self.start_time} seconds")
 
-def is_same_person(img1, img2):
-    if not os.path.exists(img1):
-        print(f"File not found: {img1}")
+
+
+def resize_image(path, size=(160, 160)):
+    img = cv2.imread(path)
+    if img is None:
+        raise FileNotFoundError(f"Could not read image at path: {path}")
+    img = cv2.resize(img, size)
+    return img  # Return the resized image
+
+model = Dp.build_model("ArcFace")
+
+def is_same_person(img1_path, img2_path):
+    try:
+        img1 = resize_image(img1_path)
+        img2 = resize_image(img2_path)
+        result = Dp.verify(img1_path=img1_path, img2_path=img2_path, enforce_detection=False, model_name='ArcFace')
+        return 'answer:',result['verified']
+    except Exception as e:
+        print(f"Error during verification: {e}")
         return False
-    if not os.path.exists(img2):
-        print(f"File not found: {img2}")
-        return False
-    result = Dp.verify(img1, img2, enforce_detection=False, model_name='ArcFace')
-    return result['verified']
+
+def get_face_vector(img_path):
+    try:
+        img = resize_image(img_path)
+        vector = Dp.represent(img, model_name='ArcFace')
+        return vector
+    except Exception as e:
+        print(f"Error during face vector extraction: {e}")
+        return None
 
 if __name__ == "__main__":
-    with test_context() as tc:
-        test = is_same_person(r'C:\Users\islam\SwiftSign\SwiftSign\2.jpg', r'C:\Users\islam\SwiftSign\SwiftSign\1.jpg')
-        print(test)
+    start = time.time()
+    print("Start time:", start)
+
+
+    # Use the correct full paths to your images
+    img1_path = r'C:\Users\islam\SwiftSign\SwiftSign\1.jpg'
+    img2_path = r'C:\Users\islam\SwiftSign\SwiftSign\2.jpg'
+
+    test = is_same_person(img1_path, img2_path)
+    print(test)
+    print("Time:", round(time.time() - start, 2), "seconds")
