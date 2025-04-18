@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, session
-from BackEnd.Database.ProjectDatabase import Student , db
+from flask import Blueprint, render_template, redirect, url_for, session, flash
+from BackEnd.Database.ProjectDatabase import Student, db
+from BackEnd.API import attendance_session  # Import the attendance session state
 
 routes_blueprint = Blueprint('routes', __name__)
 
@@ -17,13 +18,25 @@ def student_register():
 def teacher_login():
     return render_template('teacherLogin.html')
 
+
+@routes_blueprint.route('/register')
+def register():
+    return render_template('register.html')
+
 @routes_blueprint.route('/')
 def student_login():
+    # Block access if attendance is not started by the teacher
+    if not attendance_session.get('active'):
+        # Optionally, you can render a custom page or show a message
+        return render_template('')
     return render_template('studentLogin.html')
 
 @routes_blueprint.route('/attendance')
 def student_attendance():
-    return render_template('studentCamera.html')
+    # Block access if attendance is not started by the teacher
+    if not attendance_session.get('active'):
+        return render_template('studentCamera.html', blocked=True)
+    return render_template('studentCamera.html', blocked=False)
 
 @routes_blueprint.route('/logout')
 def logout():

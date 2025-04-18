@@ -102,14 +102,14 @@
       <form @submit.prevent>
         <div class="mb-3">
           <label class="form-label">Module Name</label>
-          <select class="form-control" v-model="module">
+          <select class="form-control" v-model="module" :disabled="attendanceStarted">
             <option v-for="mod in teacherModules" :key="mod">{{ mod }}</option>
           </select>
         </div>
 
         <div class="mb-3">
           <label class="form-label">Group</label>
-          <select class="form-control" v-model="group">
+          <select class="form-control" v-model="group" :disabled="attendanceStarted">
             <option v-for="grp in availableGroups" :key="grp">{{ grp }}</option>
           </select>
         </div>
@@ -145,8 +145,9 @@
               <td>{{ student.name }}</td>
               <td>{{ student.selfRecorded ? '✅' : '❌' }}</td>
               <td>
-                <button class="btn btn-success btn-sm" @click="markAttendance(student, 'present')">Present</button>
-                <button class="btn btn-danger btn-sm" @click="markAttendance(student, 'absent')">Absent</button>
+                <button class="btn btn-success btn-sm" @click="markAttendance(student, 'present')" :disabled="student.status === 'present' || !attendanceStarted">Present</button>
+                <button class="btn btn-danger btn-sm" @click="markAttendance(student, 'absent')" :disabled="student.status === 'absent' || !attendanceStarted">Absent</button>
+                <span v-if="!student.selfRecorded && !student.status" class="text-warning ms-2">(Manual mark needed)</span>
               </td>
             </tr>
           </tbody>
@@ -173,17 +174,14 @@
           module: '',
           group: '',
           teacherModules: ['Networking', 'AI', 'Databases'],
-          availableGroups: ['all', 'G1', 'G2'], // Added "All Classes" option
+          availableGroups: ['all', 'G1', 'G2'],
           classDate: new Date().toISOString().slice(0, 10),
           isDarkMode: false,
-          students: [
-            { name: 'Alice', selfRecorded: true, status: '' },
-            { name: 'Bob', selfRecorded: false, status: '' },
-            { name: 'Charlie', selfRecorded: false, status: '' }
-          ],
+          students: [],
           attendanceStarted: false,
           timer: 0,
-          timerInterval: null
+          timerInterval: null,
+          pollingInterval: null
         };
       },
       computed: {
@@ -215,14 +213,33 @@
           this.timerInterval = setInterval(() => {
             this.timer++;
           }, 1000);
+          this.fetchStudents();
+          this.pollingInterval = setInterval(this.fetchStudents, 3000);
         },
         endAttendance() {
           this.attendanceStarted = false;
           clearInterval(this.timerInterval);
           this.timerInterval = null;
+          clearInterval(this.pollingInterval);
+          this.pollingInterval = null;
         },
         markAttendance(student, status) {
-          student.status = status;
+          fetch('/api/mark_attendance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id: student.id, status })
+          })
+          .then(res => res.json())
+          .then(data => {
+            student.status = status;
+          });
+        },
+        fetchStudents() {
+          fetch('/api/attendance_students?module=' + encodeURIComponent(this.module) + '&group=' + encodeURIComponent(this.group))
+            .then(res => res.json())
+            .then(data => {
+              this.students = data.students;
+            });
         },
         downloadPDF() {
           const { jsPDF } = window.jspdf;
@@ -249,6 +266,9 @@
       beforeUnmount() {
         if (this.timerInterval) {
           clearInterval(this.timerInterval);
+        }
+        if (this.pollingInterval) {
+          clearInterval(this.pollingInterval);
         }
       }
     }).mount('#app');
