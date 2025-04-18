@@ -1,9 +1,18 @@
 from flask import blueprints, jsonify, session, request
+from datetime import datetime
 
 from BackEnd.Database.ProjectDatabase import Teacher, Class, Subject, Student ,db
 
 api_bp = blueprints.Blueprint('api', __name__)
 
+# In-memory attendance session state (replace with DB in production)
+attendance_session = {
+    'active': False,
+    'students': [],  # List of dicts: {id, name, selfRecorded, status}
+    'module': None,
+    'group': None,
+    'start_time': None
+}
 
 @api_bp.route('/api/teacher_login', methods=['POST'])
 def teacher_login():
@@ -42,8 +51,106 @@ def student_login():
     except Exception as e:
         print(e)
         return jsonify({"message": "An error occurred during login"}), 500
-        
 
+@api_bp.route('/api/student_register', methods=['POST'])
+def student_register():
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        class_name = data.get('class')
+        email = data.get('email')
+        if not name or not class_name or not email:
+            return jsonify({'message': 'All fields are required.'}), 400
+        # Check if student already exists
+        from BackEnd.Database.ProjectDatabase import Student, db
+        if Student.query.filter_by(StudentEmail=email).first():
+            return jsonify({'message': 'Student already registered with this email.'}), 409
+        # Create new student (photo will be added later)
+        new_student = Student(StudentName=name, StudentClass=class_name, StudentEmail=email)
+        db.session.add(new_student)
+        db.session.commit()
+        return jsonify({'message': 'Registration successful! Please take your photo.'}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'An error occurred during registration.'}), 500
+
+@api_bp.route('/api/student_register_photo', methods=['POST'])
+def student_register_photo():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        photo = data.get('photo')
+        if not email or not photo:
+            return jsonify({'message': 'Email and photo are required.'}), 400
+        from BackEnd.Database.ProjectDatabase import Student, db
+        student = Student.query.filter_by(StudentEmail=email).first()
+        if not student:
+            return jsonify({'message': 'Student not found.'}), 404
+        student.StudentPhoto = photo
+        db.session.commit()
+        return jsonify({'message': 'Photo saved successfully!'}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'An error occurred while saving the photo.'}), 500
+
+@api_bp.route('/api/start_attendance', methods=['POST'])
+def start_attendance():
+    """
+    Teacher starts an attendance session. Only one session at a time (per module/group).
+    """
+    if 'teacher_id' not in session:
+        return jsonify({'message': 'Not authorized'}), 401
+    data = request.get_json()
+    module = data.get('module')
+    group = data.get('group')
+    if not module or not group:
+        return jsonify({'message': 'Module and group required'}), 400
+    # Fetch students for this group/module (simplified)
+    students = Student.query.all()  # TODO: filter by group/module
+    attendance_session['active'] = True
+    attendance_session['students'] = [
+        {'id': s.StudentID, 'name': s.StudentName, 'selfRecorded': False, 'status': None}
+        for s in students
+    ]
+    attendance_session['module'] = module
+    attendance_session['group'] = group
+    attendance_session['start_time'] = datetime.now().isoformat()
+    return jsonify({'message': 'Attendance session started'}), 200
+
+@api_bp.route('/api/end_attendance', methods=['POST'])
+def end_attendance():
+    """
+    Teacher ends the attendance session.
+    """
+    if 'teacher_id' not in session:
+        return jsonify({'message': 'Not authorized'}), 401
+    attendance_session['active'] = False
+    return jsonify({'message': 'Attendance session ended'}), 200
+
+@api_bp.route('/api/attendance_students', methods=['GET'])
+def attendance_students():
+    """
+    Returns the list of students and their attendance status for the current session.
+    """
+    if not attendance_session['active']:
+        return jsonify({'students': []}), 200
+    return jsonify({'students': attendance_session['students']}), 200
+
+@api_bp.route('/api/mark_attendance', methods=['POST'])
+def mark_attendance():
+    """
+    Teacher manually marks a student as present/absent.
+    """
+    if 'teacher_id' not in session:
+        return jsonify({'message': 'Not authorized'}), 401
+    data = request.get_json()
+    student_id = data.get('student_id')
+    status = data.get('status')
+    for s in attendance_session['students']:
+        if s['id'] == student_id:
+            s['status'] = status
+            break
+    return jsonify({'message': 'Student marked as ' + status}), 200
 
 @api_bp.route('/api/attendanceRecord', methods=['POST'])
 def attendanceRecord():
@@ -89,6 +196,13 @@ def attendanceRecord():
         # with db.session.begin():
         #     db.session.add(attendance_record)
         #     db.session.commit()
+        
+        # After successful attendance, update session
+        for s in attendance_session['students']:
+            if s['id'] == student_id:
+                s['selfRecorded'] = True
+                s['status'] = 'present'
+                break
         
         return jsonify({"message": "Attendance recorded successfully"}), 200
         
