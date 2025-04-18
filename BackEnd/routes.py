@@ -28,7 +28,7 @@ def student_login():
     # Block access if attendance is not started by the teacher
     if not attendance_session.get('active'):
         # Optionally, you can render a custom page or show a message
-        return render_template('')
+        return render_template('blocked.html')
     return render_template('studentLogin.html')
 
 @routes_blueprint.route('/attendance')
