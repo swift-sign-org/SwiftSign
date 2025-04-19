@@ -216,29 +216,18 @@
           const requiredDomain = "@hns-re2sd.dz";
           return typeof email === "string" && email.trim().toLowerCase().endsWith(requiredDomain);
         },
-
-
-
-
         async login() {
           if (!this.isInstitutionalEmail(this.email)) {
             this.showError("Email must end with @hns-re2sd.dz");
             return;
           }
-
-
-
-
           if (!this.email || !this.password) {
             this.showError("Please enter both email and password.");
             return;
           }
-
-        
-
-          // Send login request to API
+          // Send login request to new API endpoint
           try {
-            const response = await fetch("/api/teacher_login", {
+            const response = await fetch("/api/teachers/login", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -249,17 +238,18 @@
               })
             });
             const data = await response.json();
-
             if (response.ok) {
               this.loginSuccess = true;
               this.successMessage = data.message || "Login Successful!";
               this.loginError = false;
-              // Reset form after successful login
-              this.email = '';
-              this.password = '';
+              // Save teacher subjects to localStorage for dashboard dropdown
+              if (data.subjects) {
+                localStorage.setItem('teacherSubjects', JSON.stringify(data.subjects));
+              }
+              // Redirect to dashboard after login
               setTimeout(() => {
-                this.loginSuccess = false;
-              }, 3000);
+                window.location.href = "/teacher-dashboard";
+              }, 1200);
             } else {
               this.showError(data.message || "Login failed.");
             }

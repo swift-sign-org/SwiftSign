@@ -173,7 +173,8 @@
         return {
           module: '',
           group: '',
-          teacherModules: ['Networking', 'AI', 'Databases'],
+          // Dynamically load teacher's subjects from localStorage (set at login)
+          teacherModules: JSON.parse(localStorage.getItem('teacherSubjects')) || [],
           availableGroups: ['all', 'G1', 'G2'],
           classDate: new Date().toISOString().slice(0, 10),
           isDarkMode: false,
@@ -208,26 +209,46 @@
           document.body.classList.toggle('dark-mode', this.isDarkMode);
         },
         startAttendance() {
-          this.attendanceStarted = true;
-          this.timer = 0;
-          this.timerInterval = setInterval(() => {
-            this.timer++;
-          }, 1000);
-          this.fetchStudents();
-          this.pollingInterval = setInterval(this.fetchStudents, 3000);
-        },
-        endAttendance() {
-          this.attendanceStarted = false;
-          clearInterval(this.timerInterval);
-          this.timerInterval = null;
-          clearInterval(this.pollingInterval);
-          this.pollingInterval = null;
-        },
-        markAttendance(student, status) {
-          fetch('/api/mark_attendance', {
+          // Start attendance session using new API endpoint
+          fetch('/api/attendance-sessions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ student_id: student.id, status })
+            body: JSON.stringify({ module: this.module, group: this.group })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.message && data.message.includes('started')) {
+              this.attendanceStarted = true;
+              this.timer = 0;
+              this.timerInterval = setInterval(() => { this.timer++; }, 1000);
+              this.fetchStudents();
+              this.pollingInterval = setInterval(this.fetchStudents, 3000);
+            } else {
+              alert(data.message || 'Failed to start session');
+            }
+          });
+        },
+        endAttendance() {
+          // End attendance session using new API endpoint
+          fetch('/api/attendance-sessions/current/end', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          })
+          .then(res => res.json())
+          .then(data => {
+            this.attendanceStarted = false;
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+          });
+        },
+        markAttendance(student, status) {
+          // Mark attendance using PATCH to new API endpoint
+          fetch(`/api/attendance-sessions/current/students/${student.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
           })
           .then(res => res.json())
           .then(data => {
@@ -235,7 +256,8 @@
           });
         },
         fetchStudents() {
-          fetch('/api/attendance_students?module=' + encodeURIComponent(this.module) + '&group=' + encodeURIComponent(this.group))
+          // Fetch students for the current session (filtered by module/group)
+          fetch('/api/attendance-sessions/current/students')
             .then(res => res.json())
             .then(data => {
               this.students = data.students;
