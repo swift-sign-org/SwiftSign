@@ -1,5 +1,6 @@
 from flask import blueprints, jsonify, session, request
 from datetime import datetime
+# from ..AI_Integration.face_recognition_asyn import get_face_vector
 
 from BackEnd.Database.ProjectDatabase import Teacher, Class, Subject, Student ,db
 
@@ -62,7 +63,6 @@ def student_register():
         if not name or not class_name or not email:
             return jsonify({'message': 'All fields are required.'}), 400
         # Check if student already exists
-        from BackEnd.Database.ProjectDatabase import Student, db
         if Student.query.filter_by(StudentEmail=email).first():
             return jsonify({'message': 'Student already registered with this email.'}), 409
         # Create new student (photo will be added later)
@@ -82,7 +82,6 @@ def student_register_photo():
         photo = data.get('photo')
         if not email or not photo:
             return jsonify({'message': 'Email and photo are required.'}), 400
-        from BackEnd.Database.ProjectDatabase import Student, db
         student = Student.query.filter_by(StudentEmail=email).first()
         if not student:
             return jsonify({'message': 'Student not found.'}), 404

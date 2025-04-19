@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-import os
+import json
+from AI_Integration.face_recognition_asyn import get_face_vector
 
 # Bcrypt and SQLAlchemy init
 bcrypt = Bcrypt()
@@ -50,8 +51,17 @@ class Student(db.Model):
     StudentID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     StudentName = db.Column(db.String(100))
     StudentEmail = db.Column(db.String(120))
-    StudentPhoto = db.Column(db.LargeBinary)
+    StudentFaceVector = db.Column(db.Text)  
     ClassIDInStudent = db.Column(db.Integer, db.ForeignKey('class.ClassID', ondelete='CASCADE'))
     def __init__(self,StudentName,StudentEmail):
         self.StudentName = StudentName
         self.StudentEmail = StudentEmail
+
+    def set_face_vector(self, ImagePath):
+        embedding = get_face_vector(ImagePath)
+        self.StudentFaceVector = json.dumps(embedding)
+
+    def get_face_vector(self):
+        if self.StudentFaceVector:
+            return json.loads(self.StudentFaceVector)
+        return None
