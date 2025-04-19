@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import json
-from AI_Integration.face_recognition_asyn import get_face_vector
+from SwiftSign.AI_Integration.face_recognition_asyn import get_face_vector
 
 # Bcrypt and SQLAlchemy init
 bcrypt = Bcrypt()
@@ -25,7 +25,7 @@ class Teacher(db.Model):
     def __init__(self, TeacherName, TeacherEmail, Password):
         self.TeacherName = TeacherName
         self.TeacherEmail = TeacherEmail
-        self.TeacherPassword = self.set_password(Password)
+        self.set_password(Password)
 
 class Class(db.Model):
     ClassID = db.Column(db.Integer, primary_key=True)

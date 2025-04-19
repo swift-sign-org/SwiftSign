@@ -3,7 +3,7 @@ from flask import Flask
 from flask_session import Session
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-from BackEnd.Database.ProjectDatabase import db
+from .BackEnd.Database.ProjectDatabase import db
 
 # Load environment variables first
 load_dotenv()
