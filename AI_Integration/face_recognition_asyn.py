@@ -1,9 +1,8 @@
 import time
 from deepface import DeepFace as Dp
-import os
 import cv2
-
-
+from numpy import dot
+from numpy.linalg import norm
 
 
 
@@ -34,6 +33,18 @@ def get_face_vector(img_path):
     except Exception as e:
         print(f"Error during face vector extraction: {e}")
         return None
+    
+def compare_face_vectors(vector1, vector2, threshold=0.35):
+    try:
+        # If DeepFace.represent returns a list of dicts, extract the 'embedding'
+        if isinstance(vector1, list) and isinstance(vector2, list):
+            vector1 = vector1[0]['embedding']
+            vector2 = vector2[0]['embedding']
+        similarity = dot(vector1, vector2) / (norm(vector1) * norm(vector2))
+        return similarity > threshold
+    except Exception as e:
+        print(f"Error during face vector comparison: {e}")
+        return False
 
 if __name__ == "__main__":
     start = time.time()
@@ -42,10 +53,12 @@ if __name__ == "__main__":
 
     # Use the correct full paths to your images
     img1_path = r'C:\Users\islam\SwiftSign\SwiftSign\1.jpg'
+    vector1 = get_face_vector(img1_path)
     
-    vector = get_face_vector(img1_path)
-    print(type(vector[0]))
-    print("Face vector:", vector[0])
+    img2_path = r'C:\Users\islam\SwiftSign\SwiftSign\2.jpg'
+    vector2 = get_face_vector(img2_path)
+
+    print(compare_face_vectors(vector1, vector2))
 
 
     print("Time:", round(time.time() - start, 2), "seconds")
