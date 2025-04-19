@@ -42,8 +42,10 @@ if __name__ == "__main__":
 
     # Use the correct full paths to your images
     img1_path = r'C:\Users\islam\SwiftSign\SwiftSign\1.jpg'
-    img2_path = r'C:\Users\islam\SwiftSign\SwiftSign\2.jpg'
+    
+    vector = get_face_vector(img1_path)
+    print(type(vector[0]))
+    print("Face vector:", vector[0])
 
-    test = is_same_person(img1_path, img2_path)
-    print(test)
+
     print("Time:", round(time.time() - start, 2), "seconds")
