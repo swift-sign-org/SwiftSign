@@ -239,8 +239,8 @@
           this.isSubmitting = true;
           
           try {
-            // Send login API request
-            const response = await fetch("/api/student_login", {
+            // Use new API endpoint for student login
+            const response = await fetch("/api/students/login", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -252,6 +252,16 @@
             
             // Handle successful response
             if (response.ok) {
+              // After login, verify student is in the class for the current session
+              const sessionRes = await fetch('/api/attendance-sessions/current/students');
+              const sessionData = await sessionRes.json();
+              const found = sessionData.students && sessionData.students.some(s => s.email.toLowerCase() === emailTrimmed.toLowerCase());
+              
+              if (!found) {
+                this.showError("You are not in the class for the current attendance session.");
+                return;
+              }
+              
               this.loginSuccess = true;
               this.successMessage = data.message || 'Login Successful!';
               this.email = '';

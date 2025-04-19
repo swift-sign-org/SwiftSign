@@ -174,7 +174,14 @@
           module: '',
           group: '',
           // Dynamically load teacher's subjects from localStorage (set at login)
-          teacherModules: JSON.parse(localStorage.getItem('teacherSubjects')) || [],
+          teacherModules: (() => {
+            try {
+              return JSON.parse(localStorage.getItem('teacherSubjects')) || [];
+            } catch (error) {
+              console.error("Error parsing teacherSubjects from localStorage:", error);
+              return [];
+            }
+          })(),
           availableGroups: ['all', 'G1', 'G2'],
           classDate: new Date().toISOString().slice(0, 10),
           isDarkMode: false,
