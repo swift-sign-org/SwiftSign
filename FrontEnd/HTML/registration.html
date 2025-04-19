@@ -249,11 +249,18 @@
             this.showErrorMessage("Please fill in all fields.");
             return;
           }
-          // TODO: Set your registration API endpoint here
-          const endpoint = "/api/student_register"; // <--- Set your endpoint here
+
+          // Validate email format
+          const domain = "@hns-re2sd.dz";
+          if (!this.email.trim().endsWith(domain)) {
+            this.showErrorMessage(`Email must end with ${domain}`);
+            return;
+          }
+
+          // Use the updated API endpoint for student registration
           this.isSubmitting = true;
           try {
-            const response = await fetch(endpoint, {
+            const response = await fetch("/api/students", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -264,6 +271,11 @@
             });
             const data = await response.json();
             if (response.ok) {
+              // Store student ID for later use with photo upload
+              if (data.student_id) {
+                localStorage.setItem('student_registration_id', data.student_id);
+              }
+              
               this.registrationSuccess = true;
               this.successMessage = data.message || 'Registration successful!';
               // Move to camera step after short delay
@@ -275,6 +287,7 @@
               this.showErrorMessage(data.message || "Registration failed.");
             }
           } catch (error) {
+            console.error("Registration error:", error);
             this.showErrorMessage("Failed to connect to the server.");
           } finally {
             this.isSubmitting = false;
@@ -320,19 +333,29 @@
         async submitPhoto() {
           if (this.isSubmitting) return;
           this.isSubmitting = true;
-          // TODO: Set your photo upload API endpoint here
-          const endpoint = "/api/student_register_photo"; // <--- Set your endpoint here
+          
+          // Get student ID from local storage (set during registration)
+          const studentId = localStorage.getItem('student_registration_id');
+          if (!studentId) {
+            this.showErrorMessage("Registration information missing. Please register again.");
+            this.isSubmitting = false;
+            return;
+          }
+
+          // Use the updated API endpoint for student photo registration
           try {
-            const response = await fetch(endpoint, {
+            const response = await fetch(`/api/students/${studentId}/photo`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                email: this.email.trim(),
-                photo: this.profileImage
+                photo: this.profileImage.split(',')[1] // Remove data:image/png;base64, prefix
               })
             });
             const data = await response.json();
             if (response.ok) {
+              // Clean up localStorage
+              localStorage.removeItem('student_registration_id');
+              
               this.statusMessage = data.message || "Photo saved successfully!";
               this.showStatus = true;
               setTimeout(() => {
@@ -343,6 +366,7 @@
               this.showErrorMessage(data.message || "Failed to save photo.");
             }
           } catch (error) {
+            console.error("Photo upload error:", error);
             this.showErrorMessage("Failed to connect to the server.");
           } finally {
             this.isSubmitting = false;
