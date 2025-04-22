@@ -154,33 +154,56 @@
   <div id="app">
     <div class="container">
       <div class="card">
-
-        <video id="video" width="320" height="240" autoplay playsinline style="margin-top: 15px; display: none; border-radius: 10px;"></video>
-        <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>        
-
-        <img v-if="!isCameraActive" :src="profileImage" alt="Profile Picture" class="profile-pic">
-        <h2 class="mt-2">[[ studentName ]]</h2>
-        <p>ID: [[ studentId ]]</p>
-
-        <button class="camera-btn mt-3" @click="toggleCamera" v-if="!photoTaken || isCameraActive">
-          <i class="bi" :class="isCameraActive ? 'bi-camera' : 'bi-camera-fill'"></i>
-          [[ isCameraActive ? 'Take Picture' : 'Start Camera' ]]
-        </button>
-
-        <div class="buttons-container" v-if="photoTaken && !isCameraActive">
-          <button class="submit-btn" @click="submitAttendance" :disabled="isSubmitting">
-            <i class="bi bi-send"></i>
-            [[ isSubmitting ? 'Sending...' : 'Submit Attendance' ]]
-          </button>
-          
-          <button class="retake-btn" @click="retakePhoto" :disabled="isSubmitting">
-            <i class="bi bi-arrow-counterclockwise"></i>
-            Retake
-          </button>
+        
+        <div class="mb-4 text-center">
+          <h5>Select Authentication Method</h5>
+          <div class="btn-group" role="group">
+            <button 
+              class="btn btn-outline-primary" 
+              :class="{ active: authMethod === 'face' }" 
+              @click="authMethod = 'face'">
+              <i class="bi bi-camera-video"></i> Face
+            </button>
+            <button 
+              class="btn btn-outline-success" 
+              :class="{ active: authMethod === 'fingerprint' }" 
+              @click="authMethod = 'fingerprint'">
+              <i class="bi bi-fingerprint"></i> Fingerprint
+            </button>
+          </div>
         </div>
+        
+<!-- Face Recognition Section -->
+<div v-if="authMethod === 'face'">
+  <video id="video" width="320" height="240" autoplay playsinline style="margin-top: 15px; display: none; border-radius: 10px;"></video>
+  <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>        
 
-        <div id="status" class="record-status mt-3" v-show="showStatus">
-          ✅ [[ statusMessage ]]
+  <img v-if="!isCameraActive" :src="profileImage" alt="Profile Picture" class="profile-pic">
+  <button class="camera-btn mt-3" @click="toggleCamera" v-if="!photoTaken || isCameraActive">
+    <i class="bi" :class="isCameraActive ? 'bi-camera' : 'bi-camera-fill'"></i>
+    [[ isCameraActive ? 'Take Picture' : 'Start Camera' ]]
+  </button>
+
+  <div class="buttons-container" v-if="photoTaken && !isCameraActive">
+    <button class="submit-btn" @click="submitAttendance" :disabled="isSubmitting">
+      <i class="bi bi-send"></i>
+      [[ isSubmitting ? 'Sending...' : 'Submit Attendance' ]]
+    </button>
+    
+    <button class="retake-btn" @click="retakePhoto" :disabled="isSubmitting">
+      <i class="bi bi-arrow-counterclockwise"></i>
+      Retake
+    </button>
+  </div>
+</div>
+
+<!-- Fingerprint Section -->
+<div v-if="authMethod === 'fingerprint'" class="text-center">
+  <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="120" alt="Fingerprint Icon" class="my-3" />
+  <p>Please scan your fingerprint to check in.</p>
+  <button class="submit-btn" @click="submitFingerprint" :disabled="isSubmitting">
+    <i class="bi bi-fingerprint"></i> [[ isSubmitting ? 'Verifying...' : 'Submit Fingerprint' ]]
+    </button>
         </div>
 
         <button class="btn btn-secondary toggle-btn" @click="toggleDarkMode">
@@ -218,7 +241,8 @@
           errorMessage: '',
           statusMessage: 'Photo captured successfully!',
           studentName: "Loading...",
-          studentId: "Loading..."
+          studentId: "Loading...",
+          authMethod: 'face', // 'face' or 'fingerprint'
         };
       },
       created() {
@@ -357,7 +381,38 @@
           } finally {
             this.isSubmitting = false;
           }
-        }
+        },
+        async submitFingerprint() {
+  this.isSubmitting = true;
+  try {
+    // Simulated fingerprint submission
+    const response = await fetch("/api/fingerprint-checkin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString()
+        // You can also add more biometric data here
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      this.statusMessage = data.message || "Fingerprint check-in successful!";
+      this.showStatus = true;
+      setTimeout(() => this.showStatus = false, 3000);
+    } else {
+      this.showErrorMessage(data.message || "Fingerprint verification failed.");
+    }
+  } catch (error) {
+    console.error("Error submitting fingerprint:", error);
+    this.showErrorMessage("Failed to connect to fingerprint system.");
+  } finally {
+    this.isSubmitting = false;
+  }
+}
+
       }
     });
   </script>
