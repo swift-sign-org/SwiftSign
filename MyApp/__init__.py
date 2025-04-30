@@ -1,9 +1,11 @@
 import os
+from flask_migrate import Migrate
 from flask import Flask
 from flask_session import Session
 from dotenv import load_dotenv
-from flask_migrate import Migrate
-from BackEnd.Database.ProjectDatabase import db
+from .BackEnd.Database.ProjectDatabase import db
+from .BackEnd.API_auth import api_bp
+from .BackEnd.routes import routes_blueprint
 
 # Load environment variables first
 load_dotenv()
@@ -37,7 +39,7 @@ def configure_app(app, config_class):
         SESSION_TYPE='filesystem',
         SESSION_PERMANENT=False,
         SESSION_USE_SIGNER=True,
-        SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL'),
+        SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL') if os.getenv('DATABASE_URL') else 'postgresql://postgres:password@localhost:5432/FaceRecognitionDB',
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
     
@@ -58,8 +60,6 @@ def initialize_extensions(app):
 
 def register_blueprints(app):
     """Register Flask blueprints"""
-    from BackEnd.API import api_bp
-    from BackEnd.routes import routes_blueprint
     
     app.register_blueprint(api_bp)
     app.register_blueprint(routes_blueprint)

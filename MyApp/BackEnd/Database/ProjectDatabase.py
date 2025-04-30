@@ -1,31 +1,12 @@
-import os
 import json
 import bcrypt
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+from MyApp.AI_Integration.face_recognition import get_face_vector
 
-# Flask application setup
-app = Flask(__name__)
 
-# Get and validate DATABASE_URL
-db_url = os.getenv('DATABASE_URL')
-if not db_url:
-    raise ValueError("DATABASE_URL not set. Check your .env file and load_dotenv path.")
-print("Connecting to:", db_url)
+db = SQLAlchemy()
 
-# Configure Flask app with SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-db = SQLAlchemy(app)
-
-# Dummy function to simulate face vector extraction
-def get_face_vector(ImagePath):
-    # TODO: Implement actual face vector extraction
-    return [0.1, 0.2, 0.3]  # Placeholder
 
 # ==================== MODELS ====================
 
@@ -52,14 +33,12 @@ class Teacher(db.Model):
 class Class(db.Model):
     ClassID = db.Column(db.Integer, primary_key=True)
     ClassName = db.Column(db.String(100))
-    ClassDescription = db.Column(db.String(200))
 
     subjects = db.relationship('Subject', backref='class_', cascade='all, delete', passive_deletes=True)
     students = db.relationship('Student', backref='class_', cascade='all, delete', passive_deletes=True)
 
-    def __init__(self, ClassName, ClassDescription):
+    def __init__(self, ClassName):
         self.ClassName = ClassName
-        self.ClassDescription = ClassDescription
 
 
 class Subject(db.Model):
@@ -94,9 +73,4 @@ class Student(db.Model):
             return json.loads(self.StudentFaceVector)
         return None
 
-# ==================== MAIN ====================
 
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        print("Database tables created successfully.")

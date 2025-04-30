@@ -4,10 +4,9 @@ import base64
 import os
 import tempfile
 # There is no function called "get_face_vector" in AI_Integration.face_recognition_asyn .
-from AI_Integration.face_recognition_asyn import get_face_vector, compare_face_vectors
+from MyApp.AI_Integration.face_recognition import get_face_vector, compare_face_vectors
 
-from BackEnd.Database.ProjectDatabase import *
-
+from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject
 api_bp = blueprints.Blueprint('api', __name__)
 
 # In-memory attendance session state (replace with DB in production)
