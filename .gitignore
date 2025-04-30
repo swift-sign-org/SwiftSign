@@ -16,3 +16,15 @@ venv
 1.jpg
 2.jpg
 C:\Users\islam\SwiftSign\SwiftSign\.idea
+__pycache__/__init__.cpython-311.pyc
+__pycache__/app.cpython-311.pyc
+AI_Integration/3.jpg
+BackEnd/logs
+BackEnd/__pycache__/API.cpython-311.pyc
+BackEnd/__pycache__/routes.cpython-311.pyc
+.gitignore
+.gitignore
+BackEnd/Database/__pycache__/ProjectDatabase.cpython-313.pyc
+AI_Integration/__pycache__/face_recognition_asyn.cpython-313.pyc
+AI_Integration/__pycache__/face_recognition_asyn.cpython-311.pyc
+.vscode/mcp.json
