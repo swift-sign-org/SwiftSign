@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv(dotenv_path=r"C:\HNS-RE2SD\Industrial Networking & AI Engineering\3rd Year\SEMESTER 06\Project 01\SwiftSign\.env")
+load_dotenv()
 
 # Flask application setup
 app = Flask(__name__)
