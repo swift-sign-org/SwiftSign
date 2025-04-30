@@ -22,7 +22,7 @@ attendance_session = {
 def teacher_login():
     try:
         teacher_email = request.json['email']
-        teacher_password = request.json['password']
+        teacher_password = request.get_json()['password']
         teacher = Teacher.query.filter_by(TeacherEmail=teacher_email).first()
         if not teacher:
             return jsonify({"message": "Invalid credentials: Invalid email"}), 401
@@ -155,14 +155,13 @@ def student_register_photo(student_id):
             student.set_face_vector(temp_path)
             db.session.commit()
             
-            # Clean up the temporary file
-            os.unlink(temp_path)
-            
             return jsonify({'message': 'Photo saved successfully!'}), 200
         except Exception as e:
             print(f"Face vector extraction error: {e}")
-            os.unlink(temp_path)
             return jsonify({'message': 'Could not process face in photo. Please try again.'}), 400
+        finally:
+            # Clean up the temporary file
+            os.unlink(temp_path)
             
     except Exception as e:
         print(e)
