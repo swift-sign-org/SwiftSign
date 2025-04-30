@@ -38,10 +38,12 @@ def compare_faces_manual(img1_path, img2_path, threshold=0.35):
         return similarity > threshold, similarity
     return False, None
 
-# Example usage
-img1 = r'C:\Users\islam\SwiftSign\SwiftSign\1.jpg'
-img2 = r'C:\Users\islam\SwiftSign\SwiftSign\2.jpg'
 
-match, similarity_score = compare_faces_manual(img1, img2)
-print("Match:", match)
-print("Cosine Similarity:", similarity_score)
+if __name__ == "__main__":
+    # Example usage
+    img1 = r'C:\Users\islam\SwiftSign\SwiftSign\MyApp\1.jpg'
+    img2 = r'C:\Users\islam\SwiftSign\SwiftSign\MyApp\2.jpg'
+
+    match, similarity_score = compare_faces_manual(img1, img2)
+    print("Match:", match)
+    print("Cosine Similarity:", similarity_score)
