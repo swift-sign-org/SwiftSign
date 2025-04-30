@@ -1,31 +1,53 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
+import os
 import json
-from SwiftSign.AI_Integration.face_recognition_asyn import get_face_vector
+import bcrypt
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
 
-# Bcrypt and SQLAlchemy init
-bcrypt = Bcrypt()
-db = SQLAlchemy()
+# Load environment variables
+load_dotenv(dotenv_path=r"C:\HNS-RE2SD\Industrial Networking & AI Engineering\3rd Year\SEMESTER 06\Project 01\SwiftSign\.env")
 
-# Models
+# Flask application setup
+app = Flask(__name__)
+
+# Get and validate DATABASE_URL
+db_url = os.getenv('DATABASE_URL')
+if not db_url:
+    raise ValueError("DATABASE_URL not set. Check your .env file and load_dotenv path.")
+print("Connecting to:", db_url)
+
+# Configure Flask app with SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+db = SQLAlchemy(app)
+
+# Dummy function to simulate face vector extraction
+def get_face_vector(ImagePath):
+    # TODO: Implement actual face vector extraction
+    return [0.1, 0.2, 0.3]  # Placeholder
+
+# ==================== MODELS ====================
+
 class Teacher(db.Model):
     TeacherID = db.Column(db.Integer, primary_key=True)
     TeacherName = db.Column(db.String(100))
-    TeacherEmail = db.Column(db.String(120))
+    TeacherEmail = db.Column(db.String(120), unique=True)
     TeacherPassword = db.Column(db.String(120))
 
     subjects = db.relationship('Subject', backref='teacher', cascade='all, delete', passive_deletes=True)
-
-    def set_password(self, password):
-        self.TeacherPassword = bcrypt.generate_password_hash(password).decode('utf-8')
-
-    def check_password(self, password):
-        return bcrypt.check_password_hash(self.TeacherPassword, password)
 
     def __init__(self, TeacherName, TeacherEmail, Password):
         self.TeacherName = TeacherName
         self.TeacherEmail = TeacherEmail
         self.set_password(Password)
+
+    def set_password(self, password):
+        self.TeacherPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.TeacherPassword.encode('utf-8'))
+
 
 class Class(db.Model):
     ClassID = db.Column(db.Integer, primary_key=True)
@@ -34,26 +56,32 @@ class Class(db.Model):
 
     subjects = db.relationship('Subject', backref='class_', cascade='all, delete', passive_deletes=True)
     students = db.relationship('Student', backref='class_', cascade='all, delete', passive_deletes=True)
-    def __init__(self,ClassName):
+
+    def __init__(self, ClassName, ClassDescription):
         self.ClassName = ClassName
+        self.ClassDescription = ClassDescription
+
 
 class Subject(db.Model):
-    SubjectID = db.Column(db.Integer, primary_key=True,autoincrement= True)
+    SubjectID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     SubjectName = db.Column(db.String(100))
     TeacherIDInSubject = db.Column(db.Integer, db.ForeignKey('teacher.TeacherID', ondelete='CASCADE'))
     ClassIDInSubject = db.Column(db.Integer, db.ForeignKey('class.ClassID', ondelete='CASCADE'))
-    def __init__(self,SubjectName,TeacherIDInSubject,ClassIDInSubject):
-        self.SubjectName = SubjectName        
+
+    def __init__(self, SubjectName, TeacherIDInSubject, ClassIDInSubject):
+        self.SubjectName = SubjectName
         self.TeacherIDInSubject = TeacherIDInSubject
         self.ClassIDInSubject = ClassIDInSubject
+
 
 class Student(db.Model):
     StudentID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     StudentName = db.Column(db.String(100))
-    StudentEmail = db.Column(db.String(120))
-    StudentFaceVector = db.Column(db.Text)  
+    StudentEmail = db.Column(db.String(120), unique=True)
+    StudentFaceVector = db.Column(db.Text)
     ClassIDInStudent = db.Column(db.Integer, db.ForeignKey('class.ClassID', ondelete='CASCADE'))
-    def __init__(self,StudentName,StudentEmail):
+
+    def __init__(self, StudentName, StudentEmail):
         self.StudentName = StudentName
         self.StudentEmail = StudentEmail
 
@@ -65,3 +93,10 @@ class Student(db.Model):
         if self.StudentFaceVector:
             return json.loads(self.StudentFaceVector)
         return None
+
+# ==================== MAIN ====================
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        print("Database tables created successfully.")
