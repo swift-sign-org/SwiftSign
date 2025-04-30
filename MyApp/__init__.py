@@ -5,6 +5,7 @@ from flask_session import Session
 from dotenv import load_dotenv
 from .BackEnd.Database.ProjectDatabase import db
 from .BackEnd.API_auth import api_bp
+from .BackEnd.API_verify import verify_bp
 from .BackEnd.routes import routes_blueprint
 
 # Load environment variables first
@@ -62,4 +63,5 @@ def register_blueprints(app):
     """Register Flask blueprints"""
     
     app.register_blueprint(api_bp)
+    app.register_blueprint(verify_bp)
     app.register_blueprint(routes_blueprint)
