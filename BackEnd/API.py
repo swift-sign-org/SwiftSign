@@ -3,9 +3,10 @@ from datetime import datetime
 import base64
 import os
 import tempfile
+# There is no function called "get_face_vector" in AI_Integration.face_recognition_asyn .
 from AI_Integration.face_recognition_asyn import get_face_vector, compare_face_vectors
 
-from BackEnd.Database.ProjectDatabase import Teacher, Class, Subject, Student, db
+from BackEnd.Database.ProjectDatabase import *
 
 api_bp = blueprints.Blueprint('api', __name__)
 
