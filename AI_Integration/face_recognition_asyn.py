@@ -3,6 +3,14 @@ from numpy import dot
 from numpy.linalg import norm
 import cv2
 
+def get_face_vector(image_path):
+    return None
+
+def compare_face_vectors(vec1, vec2):
+    vec1 = vec1[0]['embedding']
+    vec2 = vec2[0]['embedding']
+    return dot(vec1, vec2) / (norm(vec1) * norm(vec2))
+
 def resize_image(path, size=(160, 160)):
     img = cv2.imread(path)
     if img is None:

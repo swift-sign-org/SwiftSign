@@ -1,6 +1,10 @@
 from deepface import DeepFace as Dp
 import cv2
 
+
+def get_face_vector(image_path):
+    return None
+
 def verify_faces_arcface(img1_path, img2_path):
     try:
         result = Dp.verify(img1_path=img1_path, img2_path=img2_path,

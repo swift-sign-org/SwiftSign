@@ -7,7 +7,7 @@ routes_blueprint = Blueprint('routes', __name__)
 
 @routes_blueprint.route('/teacher-register')
 def teacher_register():
-    return render_template('teacherRegister.html')
+    return render_template('register_teacher.html')
 
 @routes_blueprint.route('/student-register')
 def student_register():

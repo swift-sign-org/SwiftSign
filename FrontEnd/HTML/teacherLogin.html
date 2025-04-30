@@ -169,7 +169,7 @@
           <!-- Dark Mode Toggle -->
           <div class="text-center">
             <button type="button" class="btn btn-secondary" @click="toggleDarkMode">
-              {{ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' }}
+              [[ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' ]]
             </button>
           </div>
         </form>
@@ -182,6 +182,7 @@
   <script>
     new Vue({
       el: "#app",
+      delimiters: ["[[", "]]"],
       data() {
         return {
           email: '',
