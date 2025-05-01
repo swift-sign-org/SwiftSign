@@ -44,7 +44,8 @@ def start_attendance():
         students = Student.query.filter_by(ClassIDInStudent=class_obj.ClassID).all()
         student_list = [{
             "id": student.StudentID,
-            "name": student.StudentName,
+            "firstName": student.StudentFirstName,
+            "lastName": student.StudentLastName,
             "email": student.StudentEmail,
             "selfRecorded": False,
             "status": "absent"  # Initial status
@@ -317,7 +318,8 @@ def verify_student():
                 'similarity': similarity,
                 'student': {
                     'id': student.StudentID,
-                    'name': student.StudentName,
+                    'firstName': student.StudentFirstName,
+                    'lastName': student.StudentLastName,
                     'email': student.StudentEmail
                 }
             }), 200

@@ -12,14 +12,17 @@ db = SQLAlchemy()
 
 class Teacher(db.Model):
     TeacherID = db.Column(db.Integer, primary_key=True)
-    TeacherName = db.Column(db.String(100))
+    # We returned from TeacherName to (TeacherFirstName and TeacherLastName)
+    TeacherFirstName = db.Column(db.String(100))
+    TeacherLastName = db.Column(db.String(100))
     TeacherEmail = db.Column(db.String(120), unique=True)
     TeacherPassword = db.Column(db.String(120))
 
     subjects = db.relationship('Subject', backref='teacher', cascade='all, delete', passive_deletes=True)
 
-    def __init__(self, TeacherName, TeacherEmail, Password):
-        self.TeacherName = TeacherName
+    def __init__(self, TeacherFirstName, TeacherLastName, TeacherEmail, Password):
+        self.TeacherFirstName = TeacherFirstName
+        self.TeacherLastName = TeacherLastName
         self.TeacherEmail = TeacherEmail
         self.set_password(Password)
 
@@ -55,13 +58,16 @@ class Subject(db.Model):
 
 class Student(db.Model):
     StudentID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    StudentName = db.Column(db.String(100))
+    # We returned from StudentName to (StudentFirstName and StudentLastName)
+    StudentFirstName = db.Column(db.String(100))
+    StudentLastName = db.Column(db.String(100))
     StudentEmail = db.Column(db.String(120), unique=True)
     StudentFaceVector = db.Column(db.Text)
     ClassIDInStudent = db.Column(db.Integer, db.ForeignKey('class.ClassID', ondelete='CASCADE'))
 
-    def __init__(self, StudentName, StudentEmail):
-        self.StudentName = StudentName
+    def __init__(self, StudentFirstName, StudentLastName, StudentEmail):
+        self.StudentFirstName = StudentFirstName
+        self.StudentLastName = StudentLastName
         self.StudentEmail = StudentEmail
 
     def set_face_vector(self, ImagePath):

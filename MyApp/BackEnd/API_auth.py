@@ -33,8 +33,9 @@ def teacher_login():
         # Get subjects taught by this teacher
         subjects = Subject.query.filter_by(TeacherIDInSubject=teacher.TeacherID).all()
         session['teacher_id'] = teacher.TeacherID
-        session['teacher_name'] = teacher.TeacherName
-        
+        session['teacher_first_name'] = teacher.TeacherFirstName
+        session['teacher_last_name'] = teacher.TeacherLastName
+
         return jsonify({
             "message": "Teacher login successful", 
             "subjects": [subject.SubjectName for subject in subjects]
@@ -68,7 +69,8 @@ def student_login():
             
         # Store student info in session
         session['student_id'] = student.StudentID
-        session['student_name'] = student.StudentName
+        session['student_first_name'] = student.StudentFirstName
+        session['student_last_name'] = student.StudentLastName
         session['student_email'] = student.StudentEmail
         
         return jsonify({"message": "Student login successful"}), 200
@@ -100,11 +102,12 @@ def current_student():
 def student_register():
     try:
         data = request.get_json()
-        name = data.get('name')
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
         class_name = data.get('class')
         email = data.get('email')
         
-        if not name or not class_name or not email:
+        if not (first_name and last_name) or not class_name or not email:
             return jsonify({'message': 'All fields are required.'}), 400
             
         if Student.query.filter_by(StudentEmail=email).first():
@@ -118,7 +121,7 @@ def student_register():
             db.session.commit()
             
         # Create student
-        new_student = Student(StudentName=name, StudentEmail=email)
+        new_student = Student(StudentFirstName=first_name, StudentLastName=last_name, StudentEmail=email)
         new_student.ClassIDInStudent = class_obj.ClassID
         db.session.add(new_student)
         db.session.commit()
