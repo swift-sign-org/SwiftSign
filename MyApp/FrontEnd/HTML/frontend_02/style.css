@@ -1,0 +1,198 @@
+/* Reset and base styling */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  color: #fff; /* Default text color to white */
+}
+
+/* Background and centering */
+section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  background: url("bg.jpg") no-repeat center center;
+  background-size: cover;
+  animation: animatebg 5s linear infinite;
+}
+
+@keyframes animatebg {
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Login box styling */
+.login-box {
+  width: 90%;
+  max-width: 500px;
+  min-height: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column; /* Crucial for vertical layout */
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Form layout */
+form {
+  width: 100%;
+}
+
+/* Headings */
+h2 {
+  font-size: 2em;
+  color: #fff;
+  text-align: center;
+}
+
+/* Input field container */
+.input-box {
+  position: relative;
+  margin: 30px 0;
+  width: 100%;
+  border-bottom: 2px solid #fff;
+}
+
+/* Labels over input */
+.input-box label {
+  position: absolute;
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+  font-size: 1em;
+  color: #fff;
+  pointer-events: none;
+  transition: 0.5s;
+}
+
+/* Floating label effect */
+.input-box input:focus ~ label,
+.input-box input:valid ~ label {
+  top: -5px;
+}
+
+/* Input field styling */
+.input-box input {
+  width: 100%;
+  height: 50px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1em;
+  color: #fff;
+  padding: 0 35px 0 5px;
+}
+
+/* Submit button */
+.button {
+  width: 100%;
+  height: 45px;
+  background: #fff;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  transition: background 0.3s ease;
+  color: #000; /* Button text color */
+}
+
+.button:hover {
+  background: #f0f0f0;
+}
+
+/* Upload image section */
+.upload-label {
+  display: inline-block;
+  margin-top: 10px;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 8px 20px;
+  border-radius: 20px;
+  transition: 0.3s ease;
+  text-align: center;
+  width: 100%;
+  text-align: center;
+}
+
+.upload-label:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Hide the actual file input */
+.input-box input[type="file"] {
+  display: none;
+  /* Add z-index to ensure file input is clickable */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0; /* Make file input invisible */
+  cursor: pointer; /* Ensure pointer cursor shows */
+  z-index: 2; /* Ensure it is on top */
+}
+
+/* Image preview style */
+.static-pic {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  margin-top: 15px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  border: 2px solid #fff;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.static-pic:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+}
+
+/* Toggle Button Group */
+.user-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 5px;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+/* Toggle Buttons - Base */
+.toggle-mode {
+  flex: 1;
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 1em;
+  padding: 12px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  border-radius: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Active (selected) state */
+.toggle-mode.active {
+  background: rgba(255, 255, 255, 0.8);
+  color: #000;
+  box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+  z-index: 2;
+}

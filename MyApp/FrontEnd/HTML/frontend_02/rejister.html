@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+  <section id="app">
+    <div class="login-box">
+      <h2>Register as {{ userType }}</h2>
+
+      <!-- Toggle User Type -->
+      <div class="user-toggle">
+        <button
+          class="toggle-mode"
+          :class="{ active: userType === 'Teacher' }"
+          @click.prevent="userType = 'Teacher'"
+        >
+          👨‍🏫 Teacher
+        </button>
+        <button
+          class="toggle-mode"
+          :class="{ active: userType === 'Student' }"
+          @click.prevent="userType = 'Student'"
+        >
+          👨‍🎓 Student
+        </button>
+      </div>
+      
+      <!-- Registration Form -->
+      <form @submit.prevent="handleSubmit">
+        <!-- Common Fields -->
+        <div class="input-box">
+          <input type="text" v-model="form.firstname" required />
+          <label>First Name</label>
+        </div>
+
+        <div class="input-box">
+          <input type="text" v-model="form.lastname" required />
+          <label>Last Name</label>
+        </div>
+
+        <div class="input-box">
+          <input type="email" v-model="form.email" required />
+          <label>Email</label>
+        </div>
+
+        <!-- Teacher Only Fields -->
+        <div v-if="userType === 'Teacher'">
+          <div class="input-box">
+            <input type="password" v-model="form.password" required />
+            <label>Password</label>
+          </div>
+
+          <div class="input-box">
+            <input type="text" v-model="form.subject" required />
+            <label>Subject</label>
+          </div>
+        </div>
+
+        <!-- Student Only Fields -->
+        <div v-else>
+          <div class="input-box">
+            <input type="text" v-model="form.class" required />
+            <label>Class</label>
+          </div>
+        </div>
+
+<!-- Picture Upload Area -->
+<div class="input-box">
+  <!-- Hidden file input -->
+  <input id="file-upload" type="file" ref="fileInput" @change="handleImageUpload" />
+
+  <!-- Update Picture Button -->
+  <button type="button" class="upload-btn" @click="triggerFileInput">📷 Update Picture</button>
+</div>
+
+<!-- Preview -->
+<div v-if="form.picture" style="text-align:center;">
+  <img :src="form.picture" class="static-pic" />
+</div>
+
+        <!-- Preview -->
+        <div v-if="form.picture" style="text-align:center;">
+          <img :src="form.picture" class="static-pic" />
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="button">Register</button>
+      </form>
+
+      <!-- Success/Error Message -->
+      <div v-if="message" :class="['message', messageType]">{{ message }}</div>
+    </div>
+  </section>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp } = Vue;
+    createApp({
+      data() {
+        return {
+          userType: 'Teacher',
+          form: {
+            firstname: '',
+            lastname: '',
+            email: '',
+            password: '',
+            subject: '',
+            class: '',
+            picture: null,
+          },
+          message: '',
+          messageType: '',
+        };
+      },
+      methods: {
+        handleImageUpload(event) {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              this.form.picture = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        },
+        handleSubmit() {
+          this.message = `${this.userType} Registered Successfully!`;
+          this.messageType = 'success';
+
+          // Log output for development
+          console.log("Form Data:", this.form);
+        },
+      },
+    }).mount("#app");
+  </script>
+</body>
+</html>
