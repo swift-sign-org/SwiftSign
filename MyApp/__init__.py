@@ -3,10 +3,10 @@ from flask_migrate import Migrate
 from flask import Flask
 from flask_session import Session
 from dotenv import load_dotenv
-from .BackEnd.Database.ProjectDatabase import db
-from .BackEnd.API_auth import api_bp
-from .BackEnd.API_verify import verify_bp
-from .BackEnd.routes import routes_blueprint
+from MyApp.BackEnd.Database.ProjectDatabase import db
+from MyApp.BackEnd.API_auth import api_bp
+from MyApp.BackEnd.API_verify import verify_bp
+from MyApp.BackEnd.routes import routes_blueprint
 
 # Load environment variables first
 load_dotenv()
@@ -19,7 +19,8 @@ def create_app(config_class=None):
     """Application factory with optional config class"""
     app = Flask(__name__,
                 static_folder='FrontEnd',
-                template_folder='FrontEnd/HTML')
+                template_folder='FrontEnd/HTML'
+    )
 
     # Configure application
     configure_app(app, config_class)
