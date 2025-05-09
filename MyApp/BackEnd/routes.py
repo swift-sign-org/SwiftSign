@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, session, flash
-from BackEnd.Database.ProjectDatabase import Student, db
+from MyApp.BackEnd.Database.ProjectDatabase import Student, db
 from MyApp.BackEnd.API_auth import attendance_session  # Import the attendance session state
 
 routes_blueprint = Blueprint('routes', __name__)
