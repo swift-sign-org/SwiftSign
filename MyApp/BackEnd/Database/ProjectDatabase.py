@@ -1,8 +1,7 @@
 import json
 import bcrypt
 from flask_sqlalchemy import SQLAlchemy
-
-from MyApp.AI_Integration.face_recognition import get_face_vector
+# from MyApp.AI_Integration.face_recognition import get_face_vector
 
 
 db = SQLAlchemy()
@@ -50,10 +49,9 @@ class Subject(db.Model):
     TeacherIDInSubject = db.Column(db.Integer, db.ForeignKey('teacher.TeacherID', ondelete='CASCADE'))
     ClassIDInSubject = db.Column(db.Integer, db.ForeignKey('class.ClassID', ondelete='CASCADE'))
 
-    def __init__(self, SubjectName, TeacherIDInSubject, ClassIDInSubject):
+    def __init__(self, SubjectName, TeacherIDInSubject):
         self.SubjectName = SubjectName
         self.TeacherIDInSubject = TeacherIDInSubject
-        self.ClassIDInSubject = ClassIDInSubject
 
 
 class Student(db.Model):
@@ -71,12 +69,14 @@ class Student(db.Model):
         self.StudentEmail = StudentEmail
 
     def set_face_vector(self, ImagePath):
-        embedding = get_face_vector(ImagePath)
-        self.StudentFaceVector = json.dumps(embedding)
-
+        # embedding = self.get_face_vector(ImagePath)
+        # self.StudentFaceVector = json.dumps(embedding)
+        
+        self.StudentFaceVector = json.dumps(ImagePath)
     def get_face_vector(self):
         if self.StudentFaceVector:
             return json.loads(self.StudentFaceVector)
         return None
-
+    def set_class(self, class_id):
+        self.ClassIDInStudent = class_id
 
