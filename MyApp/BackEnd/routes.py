@@ -5,13 +5,11 @@ from MyApp.BackEnd.API_auth import attendance_session  # Import the attendance s
 routes_blueprint = Blueprint('routes', __name__)
 
 
-@routes_blueprint.route('/teacher-register')
+@routes_blueprint.route('/register')
 def teacher_register():
-    return render_template('register_teacher.html')
+    return render_template('register.html')
 
-@routes_blueprint.route('/student-register')
-def student_register():
-    return render_template('studentRegister.html')
+
 
 
 @routes_blueprint.route('/teacher-login')
@@ -19,9 +17,6 @@ def teacher_login():
     return render_template('teacherLogin.html')
 
 
-@routes_blueprint.route('/register')
-def register():
-    return render_template('register.html')
 
 @routes_blueprint.route('/')
 def student_login():
@@ -29,14 +24,14 @@ def student_login():
     if not attendance_session.get('active'):
         # Optionally, you can render a custom page or show a message
         return render_template('blocked.html')
-    return render_template('studentLogin.html')
+    return render_template('StudentLogin.html')
 
 @routes_blueprint.route('/attendance')
 def student_attendance():
     # Block access if attendance is not started by the teacher
     if not attendance_session.get('active'):
-        return render_template('studentCamera.html', blocked=True)
-    return render_template('studentCamera.html', blocked=False)
+        return render_template('StudentLogin.html', blocked=True)
+    return render_template('camera.html', blocked=False)
 
 @routes_blueprint.route('/logout')
 def logout():
@@ -51,9 +46,3 @@ def teacher_dashboard():
     return render_template('teacherMainPage.html')
 
 
-@routes_blueprint.route('/create-student')
-def create_student():
-    new_student = Student(StudentEmail="islam@hns-re2sd.dz", StudentName="islam")
-    db.session.add(new_student)
-    db.session.commit()
-    return redirect(url_for('routes.teacher_dashboard'))

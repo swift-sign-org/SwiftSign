@@ -18,8 +18,8 @@ sess = Session()
 def create_app(config_class=None):
     """Application factory with optional config class"""
     app = Flask(__name__,
-                static_folder='FrontEnd',
-                template_folder='FrontEnd/HTML'
+                static_folder='FrontEnd/FrontEnd_02',
+                template_folder='FrontEnd/FrontEnd_02'
     )
 
     # Configure application
