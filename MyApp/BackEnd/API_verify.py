@@ -3,7 +3,7 @@ from datetime import datetime
 import base64
 import os
 import tempfile
-from MyApp.AI_Integration.face_recognition import get_face_vector, compare_face_vectors
+from MyApp.AI_Integration.face_recognition import get_arcface_vector, compare_face_vectors
 from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject
 from MyApp.BackEnd.API_auth import attendance_session
 
@@ -160,9 +160,7 @@ def mark_attendance():
         if not student_id:
             return jsonify({"message": "Student not logged in"}), 401
             
-        # Check if attendance is active
-        if not attendance_session['active']:
-            return jsonify({"message": "No active attendance session"}), 403
+
             
         # Get student data
         student = Student.query.get(student_id)
@@ -173,6 +171,7 @@ def mark_attendance():
         data = request.get_json()
         photo_b64 = data.get('photo')
         if not photo_b64:
+            print('image not found')
             return jsonify({'message': 'Photo is required.'}), 400
             
         # Save photo temporarily
@@ -183,20 +182,21 @@ def mark_attendance():
             
         try:
             # Extract face vector from uploaded photo
-            new_face_vector = get_face_vector(temp_path)
+            new_face_vector = get_arcface_vector(temp_path)
+            print(new_face_vector)
             
             # Compare with stored face vector
             stored_face_vector = student.get_face_vector()
             if stored_face_vector is None:
                 os.unlink(temp_path)
                 return jsonify({'message': 'No reference photo for comparison.'}), 400
-                
-            match, similarity = compare_face_vectors(new_face_vector, stored_face_vector)
-            
+            print(stored_face_vector)
+            similarity = compare_face_vectors(new_face_vector, stored_face_vector)
+            print(similarity)
             # Clean up the temporary file
             os.unlink(temp_path)
             
-            if not match:
+            if similarity<0.2:
                 return jsonify({
                     'message': 'Face does not match registered student.',
                     'similarity': similarity
@@ -300,7 +300,7 @@ def verify_student():
             
         try:
             # Extract face vector from uploaded photo
-            new_face_vector = get_face_vector(temp_path)
+            new_face_vector = get_arcface_vector(temp_path)
             
             # Compare with stored face vector
             stored_face_vector = student.get_face_vector()

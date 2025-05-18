@@ -2,6 +2,7 @@ from flask import blueprints, jsonify, session, request
 import base64
 import os
 import tempfile
+import logging
 
 from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject
 
@@ -16,6 +17,22 @@ attendance_session = {
     'group': None,
     'start_time': None
 }
+
+
+
+
+
+# Configure logging to file (only errors)
+log_path = os.path.join(os.path.dirname(__file__), 'logs')
+logging.basicConfig(
+    filename=log_path,
+    level=logging.INFO,  # Only log errors and above
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+
+
+
+
 
 # Teacher login (POST /api/teachers/login)
 @api_bp.route('/api/teachers/login', methods=['POST'])
@@ -169,3 +186,51 @@ def student_register_photo(student_id):
     except Exception as e:
         print(e)
         return jsonify({'message': 'An error occurred while saving the photo.'}), 500
+
+
+@api_bp.route('/api/teachers', methods=['POST'])
+def teacher_register():
+    try:
+        logging.info('[1] --- Teacher Registration Request Received ---')
+        data = request.get_json()
+        logging.info(f'[2] Request data: {data}')
+        name = data.get('name')
+        subject = data.get('subject')
+        email = data.get('email')
+        password = data.get('password')
+
+        if not name or not subject or not email or not password:
+            logging.warning('[3] Validation failed: missing fields')
+            return jsonify({'message': 'All fields are required.'}), 400
+
+        # Add more detailed logging for duplicate email check
+        existing_teacher = Teacher.query.filter_by(TeacherEmail=email).first()
+        if existing_teacher:
+            logging.warning(f'[4] Teacher already exists with email: {email}, TeacherID: {existing_teacher.TeacherID}')
+            return jsonify({'message': 'Teacher already registered with this email.'}), 409
+
+        # Add log for email before creating teacher
+        logging.info(f'[4.5] Email check passed, proceeding with teacher creation for: {email}')
+        
+        logging.info('[5] Creating new Teacher object...')
+        new_teacher = Teacher(TeacherName=name, TeacherEmail=email, Password=password)
+        db.session.add(new_teacher)
+        db.session.commit()
+        logging.info(f'[6] New teacher created with ID: {new_teacher.TeacherID}')
+
+        logging.info('[7] Checking if subject exists...')
+        subject_obj = Subject.query.filter_by(SubjectName=subject).first()
+        if not subject_obj:
+            logging.info('[8] Subject does not exist, creating new subject...')
+            new_subject = Subject(SubjectName=subject, TeacherIDInSubject=new_teacher.TeacherID)
+            db.session.add(new_subject)
+            db.session.commit()
+            logging.info(f'[9] New subject created: {subject}')
+        else:
+            logging.info('[10] Subject already exists.')
+
+        logging.info('[11] Teacher registration successful!')
+        return jsonify({'message': 'Registration successful!'}), 200
+    except Exception as e:
+        logging.error(f'[12] Exception during teacher registration: {e}')
+        return jsonify({'message': 'An error occurred during registration.'}), 500
