@@ -14,7 +14,7 @@
   <script src="https://unpkg.com/vue@3"></script>
 
   <!-- Include your custom styles -->
-  <link rel="stylesheet" href="style.css"> <!-- Assuming your CSS is named 'styles.css' -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 </head>
 <body>
@@ -24,21 +24,21 @@
         <div class="text-center mb-4">
           <h3>📘 Smart Attendance Portal</h3>
           <p class="mb-0">Session details auto-filled. Mark attendance easily!</p>
-          <div class="timer" v-if="attendanceStarted">⏳ Session Duration: {{ formattedTime }}</div>
+          <div class="timer" v-if="attendanceStarted">⏳ Session Duration: [[ formattedTime ]]</div>
         </div>
 
         <form @submit.prevent>
           <div class="mb-3">
             <label class="form-label">Module Name</label>
             <select class="form-control" v-model="module" :disabled="attendanceStarted">
-              <option v-for="mod in teacherModules" :key="mod">{{ mod }}</option>
+              <option v-for="mod in teacherModules" :key="mod" style="color: black;"  >[[ mod ]]</option>
             </select>
           </div>
 
-          <div class="mb-3">
+          <div class="mb-3" >
             <label class="form-label">Group</label>
-            <select class="form-control" v-model="group" :disabled="attendanceStarted">
-              <option v-for="grp in availableGroups" :key="grp">{{ grp }}</option>
+            <select class="form-control" v-model="group" :disabled="attendanceStarted" >
+              <option v-for="grp in availableGroups" :key="grp"   style="color: black;">[[ grp ]]</option>
             </select>
           </div>
 
@@ -70,8 +70,8 @@
             </thead>
             <tbody>
               <tr v-for="student in students" :key="student.name">
-                <td>{{ student.name }}</td>
-                <td>{{ student.selfRecorded ? '✅' : '❌' }}</td>
+                <td>[[ student.name ]]</td>
+                <td>[[ student.selfRecorded ? '✅' : '❌' ]]</td>
                 <td>
                   <button class="btn btn-success btn-sm" @click="markAttendance(student, 'present')" :disabled="student.status === 'present' || !attendanceStarted">Present</button>
                   <button class="btn btn-danger btn-sm" @click="markAttendance(student, 'absent')" :disabled="student.status === 'absent' || !attendanceStarted">Absent</button>
@@ -92,18 +92,13 @@
     const { createApp } = Vue;
 
     createApp({
+      
       data() {
         return {
+          
           module: '',
           group: '',
-          teacherModules: (() => {
-            try {
-              return JSON.parse(localStorage.getItem('teacherSubjects')) || [];
-            } catch (error) {
-              console.error("Error parsing teacherSubjects from localStorage:", error);
-              return [];
-            }
-          })(),
+          teacherModules: ['Module 1', 'Module 2', 'Module 3'],
           availableGroups: ['all', 'G1', 'G2'],
           classDate: new Date().toISOString().slice(0, 10),
           isDarkMode: false,
@@ -138,7 +133,7 @@
           document.body.classList.toggle('dark-mode', this.isDarkMode);
         },
         startAttendance() {
-          fetch('/api/attendance-sessions', {
+          fetch('/api/attendance/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ module: this.module, group: this.group })
@@ -157,7 +152,7 @@
           });
         },
         endAttendance() {
-          fetch('/api/attendance-sessions/current/end', {
+          fetch('/api/attendance/end', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
           })
@@ -171,21 +166,22 @@
           });
         },
         markAttendance(student, status) {
-          fetch(`/api/attendance-sessions/current/students/${student.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
-          })
-          .then(res => res.json())
-          .then(data => {
-            student.status = status;
-          });
+          // No direct PATCH endpoint exists in backend for manual marking.
+          // You may implement this in the backend if needed.
+          alert('Manual marking is not implemented in the backend API.');
         },
         fetchStudents() {
-          fetch('/api/attendance-sessions/current/students')
+          fetch('/api/attendance/students')
             .then(res => res.json())
             .then(data => {
-              this.students = data.students;
+              if (data.session && data.session.students) {
+                this.students = data.session.students.map(s => ({
+                  id: s.id,
+                  name: s.firstName ? `${s.firstName} ${s.lastName}` : s.name,
+                  selfRecorded: s.selfRecorded,
+                  status: s.status
+                }));
+              }
             });
         },
         downloadPDF() {
@@ -218,6 +214,7 @@
           clearInterval(this.pollingInterval);
         }
       }
+    , delimiters: ['[[', ']]']
     }).mount('#app');
   </script>
 </body>

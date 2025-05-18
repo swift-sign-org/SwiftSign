@@ -7,7 +7,7 @@
   <link rel="icon" href="001.PNG" type="image/png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <body>
@@ -27,7 +27,7 @@
                   <label>Email Address</label>
                 </div>
       
-                <button type="submit" class="button" :disabled="isSubmitting">
+                <button type="submit" class="button" :disabled="isSubmitting" style="color: black;" >
                   <i class="bi bi-box-arrow-in-right"></i>
                   <span v-if="isSubmitting">Processing...</span>
                   <span v-else>Login</span>
@@ -135,16 +135,7 @@
                     
                     // Handle successful response
                     if (response.ok) {
-                      // After login, verify student is in the class for the current session
-                      const sessionRes = await fetch('/api/attendance-sessions/current/students');
-                      const sessionData = await sessionRes.json();
-                      const found = sessionData.students && sessionData.students.some(s => s.email.toLowerCase() === emailTrimmed.toLowerCase());
-                      
-                      if (!found) {
-                        this.showError("You are not in the class for the current attendance session.");
-                        return;
-                      }
-                      
+                      // Show success message
                       this.loginSuccess = true;
                       this.successMessage = data.message || 'Login Successful!';
                       this.email = '';
@@ -152,9 +143,29 @@
                       // Redirect after showing success message
                       setTimeout(() => {
                         this.loginSuccess = false;
-                        window.location.href = this.redirectUrl;
+                        // redirect to the route /attendance
+                        window.location.href = '/attendance';
                       }, 1200);
-                    } 
+                      // // After login, verify student is in the class for the current session
+                      // const sessionRes = await fetch('/api/attendance-sessions/current/students');
+                      // const sessionData = await sessionRes.json();
+                      // const found = sessionData.students && sessionData.students.some(s => s.email.toLowerCase() === emailTrimmed.toLowerCase());
+                      
+                      // if (!found) {
+                      //   this.showError("You are not in the class for the current attendance session.");
+                      //   return;
+                      // }
+                      
+                      // this.loginSuccess = true;
+                      // this.successMessage = data.message || 'Login Successful!';
+                      // this.email = '';
+                      
+                      // // Redirect after showing success message
+                      // setTimeout(() => {
+                      //   this.loginSuccess = false;
+                      //   window.location.href = this.redirectUrl;
+                      // }, 1200);
+                    }
                     // Handle error response
                     else {
                       this.showError(data.message || "Login failed.");

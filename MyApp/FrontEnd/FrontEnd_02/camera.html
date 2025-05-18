@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Face Recognition Login</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body>
@@ -80,6 +80,7 @@
         new Vue({
           el: '#app',
           delimiters: ['[[', ']]'], // Change Vue delimiters to avoid conflict with Jinja
+
           data() {
             return {
               isDarkMode: false,
@@ -201,14 +202,13 @@
               
               try {
                 // Use the new API endpoint for attendance recording
-                const response = await fetch("/api/attendance-records", {
+                const response = await fetch("/api/attendance", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
-                    photo: this.profileImage.split(',')[1], // Remove data:image/png;base64, prefix
-                    timestamp: new Date().toISOString()
+                    photo: this.profileImage.split(',')[1], 
                   })
                 });
                 
