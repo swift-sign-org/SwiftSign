@@ -194,12 +194,13 @@ def teacher_register():
         logging.info('[1] --- Teacher Registration Request Received ---')
         data = request.get_json()
         logging.info(f'[2] Request data: {data}')
-        name = data.get('name')
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
         subject = data.get('subject')
         email = data.get('email')
         password = data.get('password')
 
-        if not name or not subject or not email or not password:
+        if not first_name or not last_name or not subject or not email or not password:
             logging.warning('[3] Validation failed: missing fields')
             return jsonify({'message': 'All fields are required.'}), 400
 
@@ -213,7 +214,7 @@ def teacher_register():
         logging.info(f'[4.5] Email check passed, proceeding with teacher creation for: {email}')
         
         logging.info('[5] Creating new Teacher object...')
-        new_teacher = Teacher(TeacherName=name, TeacherEmail=email, Password=password)
+        new_teacher = Teacher(TeacherFirstName=first_name, TeacherLastName=last_name, TeacherEmail=email, Password=password)
         db.session.add(new_teacher)
         db.session.commit()
         logging.info(f'[6] New teacher created with ID: {new_teacher.TeacherID}')

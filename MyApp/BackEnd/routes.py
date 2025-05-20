@@ -7,7 +7,7 @@ routes_blueprint = Blueprint('routes', __name__)
 
 @routes_blueprint.route('/register')
 def teacher_register():
-    return render_template('register.html')
+    return render_template('rejister.html')
 
 
 
@@ -30,7 +30,7 @@ def student_login():
 def student_attendance():
     # Block access if attendance is not started by the teacher
     if not attendance_session.get('active'):
-        return render_template('StudentLogin.html', blocked=True)
+        return redirect(url_for('routes.student_login'))
     return render_template('camera.html', blocked=False)
 
 @routes_blueprint.route('/logout')
