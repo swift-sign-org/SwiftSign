@@ -4,9 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Register</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    /* Error Popup Styles */
+    .error-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #ff4444;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-width: 300px;
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    
+    .error-popup .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
+    .error-popup.hide {
+      animation: slideOut 0.3s ease-in forwards;
+    }
+  </style>
 </head>
 <body>
   <section id="app">
@@ -84,17 +137,18 @@
   <img :src="form.picture" class="static-pic" />
 </div>
 
-        <!-- Preview -->
-        <div v-if="form.picture" style="text-align:center;">
-          <img :src="form.picture" class="static-pic" />
-        </div>
-
         <!-- Submit Button -->
         <button type="submit" class="button">Register</button>
       </form>
 
       <!-- Success/Error Message -->
       <div v-if="message" :class="['message', messageType]">{{ message }}</div>
+
+      <!-- Error Popup -->
+      <div v-if="showErrorPopup" class="error-popup">
+        <button class="close-btn" @click="showErrorPopup = false">×</button>
+        {{ errorMessage }}
+      </div>
     </div>
   </section>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -115,6 +169,10 @@
           },
           message: '',
           messageType: '',
+          isSubmitting: false,
+          showErrorPopup: false,
+          errorMessage: '',
+          emailDomain: '@hns-re2sd.dz'
         };
       },
       methods: {
@@ -128,12 +186,170 @@
             reader.readAsDataURL(file);
           }
         },
-        handleSubmit() {
-          this.message = `${this.userType} Registered Successfully!`;
-          this.messageType = 'success';
-
-          // Log output for development
-          console.log("Form Data:", this.form);
+        triggerFileInput() {
+          this.$refs.fileInput.click();
+        },
+        showErrorMessage(message) {
+          this.errorMessage = message;
+          this.showErrorPopup = true;
+          setTimeout(() => {
+            this.showErrorPopup = false;
+          }, 5000);
+        },
+        validateForm() {
+          // Check required fields based on user type
+          if (!this.form.firstname.trim() || !this.form.lastname.trim() || !this.form.email.trim()) {
+            this.showErrorMessage("All fields are required.");
+            return false;
+          }
+          
+          // Validate email domain
+          if (!this.form.email.trim().endsWith(this.emailDomain)) {
+            this.showErrorMessage(`Email must end with ${this.emailDomain}`);
+            return false;
+          }
+          
+          // Teacher specific validation
+          if (this.userType === 'Teacher') {
+            if (!this.form.password.trim() || !this.form.subject.trim()) {
+              this.showErrorMessage("All fields are required.");
+              return false;
+            }
+          } else {
+            // Student specific validation
+            if (!this.form.class.trim()) {
+              this.showErrorMessage("Class field is required.");
+              return false;
+            }
+          }
+          
+          return true;
+        },
+        async registerTeacher() {
+          try {
+            const response = await fetch("/api/teachers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                first_name: this.form.firstname.trim() ,
+                last_name: this.form.lastname.trim(),
+                subject: this.form.subject.trim(),
+                email: this.form.email.trim(),
+                password: this.form.password.trim()
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+              this.message = data.message || 'Registration successful!';
+              this.messageType = 'success';
+              
+              // Redirect to login page after a delay
+              setTimeout(() => {
+                window.location.href = "/teacher-login";
+              }, 1500);
+            } else {
+              this.showErrorMessage(data.message || "Registration failed.");
+            }
+          } catch (error) {
+            console.error("Registration error:", error);
+            this.showErrorMessage("Failed to connect to the server.");
+          } finally {
+            this.isSubmitting = false;
+          }
+        },
+        async registerStudent() {
+          try {
+            const response = await fetch("/api/students", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                first_name: this.form.firstname.trim(),
+                last_name: this.form.lastname.trim(),
+                class: this.form.class.trim(),
+                email: this.form.email.trim()
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+              // Store student ID for photo upload
+              if (data.student_id) {
+                localStorage.setItem('student_registration_id', data.student_id);
+                
+                // Upload photo if available
+                if (this.form.picture) {
+                  return this.uploadStudentPhoto(data.student_id);
+                }
+              }
+              
+              this.message = data.message || 'Registration successful!';
+              this.messageType = 'success';
+              
+              setTimeout(() => {
+                // Redirect to student login
+                window.location.href = "/";
+              }, 1500);
+            } else {
+              this.showErrorMessage(data.message || "Registration failed.");
+            }
+          } catch (error) {
+            console.error("Registration error:", error);
+            this.showErrorMessage("Failed to connect to the server.");
+          } finally {
+            this.isSubmitting = false;
+          }
+        },
+        async uploadStudentPhoto(studentId) {
+          // Extract base64 data from the picture (remove the data:image/... prefix)
+          const base64Data = this.form.picture.split(',')[1];
+          
+          try {
+            const response = await fetch(`/api/students/${studentId}/photo`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                photo: base64Data
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+              this.message = 'Registration successful with photo!';
+              this.messageType = 'success';
+              
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 1500);
+            } else {
+              this.showErrorMessage(data.message || "Photo upload failed.");
+            }
+          } catch (error) {
+            console.error("Photo upload error:", error);
+            this.showErrorMessage("Registration completed but photo upload failed.");
+            
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 3000);
+          }
+        },
+        async handleSubmit() {
+          if (this.isSubmitting) return;
+          
+          if (!this.validateForm()) {
+            return;
+          }
+          
+          this.isSubmitting = true;
+          
+          if (this.userType === 'Teacher') {
+            await this.registerTeacher();
+          } else {
+            await this.registerStudent();
+          }
         },
       },
     }).mount("#app");

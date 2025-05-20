@@ -4,7 +4,7 @@ import base64
 import os
 import tempfile
 from MyApp.AI_Integration.face_recognition import get_arcface_vector, compare_face_vectors
-from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject
+from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject, Teaching9
 from MyApp.BackEnd.API_auth import attendance_session
 
 # Create a new blueprint for verification-related endpoints
@@ -273,6 +273,41 @@ def get_attendance_record():
     except Exception as e:
         print(e)
         return jsonify({"message": "An error occurred retrieving attendance history"}), 500
+
+# Get teacher's modules and available groups
+@verify_bp.route('/api/teacher/modules-classes', methods=['GET'])
+def get_teacher_modules_classes():
+    try:
+        teacher_id = session.get('teacher_id')
+        if not teacher_id:
+            return jsonify({"message": "Teacher not logged in"}), 401
+            
+        # Get subjects (modules) taught by this teacher
+        subjects = Subject.query.filter_by(TeacherIDInSubject=teacher_id).all()
+        
+        # Get classes directly associated with this teacher through Teaching9 table
+        teachings = Teaching9.query.filter_by(TeacherIDInTeaching=teacher_id).all()
+        
+        # Collect unique modules (subjects)
+        modules = []
+        for subject in subjects:
+            if subject.SubjectName not in modules:
+                modules.append(subject.SubjectName)
+        
+        # Get classes (groups) from teachings relationship
+        class_ids = [teaching.ClassIDInTeaching for teaching in teachings]
+        
+        # Get class names for the unique class IDs
+        classes = Class.query.filter(Class.ClassID.in_(class_ids)).all()
+        groups = [class_.ClassName for class_ in classes]
+        
+        return jsonify({
+            "modules": modules,
+            "groups": groups
+        }), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"message": "An error occurred retrieving teacher's modules and classes"}), 500
 
 # New endpoints using the verify_bp blueprint
 

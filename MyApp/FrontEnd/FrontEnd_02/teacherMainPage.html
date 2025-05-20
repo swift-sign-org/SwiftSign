@@ -31,14 +31,14 @@
           <div class="mb-3">
             <label class="form-label">Module Name</label>
             <select class="form-control" v-model="module" :disabled="attendanceStarted">
-              <option v-for="mod in teacherModules" :key="mod" style="color: black;"  >[[ mod ]]</option>
+              <option v-for="mod in teacherModules" :key="mod" style="color: black;">[[ mod ]]</option>
             </select>
           </div>
 
           <div class="mb-3" >
             <label class="form-label">Group</label>
             <select class="form-control" v-model="group" :disabled="attendanceStarted" >
-              <option v-for="grp in availableGroups" :key="grp"   style="color: black;">[[ grp ]]</option>
+              <option v-for="grp in availableGroups" :key="grp" style="color: black;">[[ grp ]]</option>
             </select>
           </div>
 
@@ -98,8 +98,8 @@
           
           module: '',
           group: '',
-          teacherModules: ['Module 1', 'Module 2', 'Module 3'],
-          availableGroups: ['all', 'G1', 'G2'],
+          teacherModules: [],
+          availableGroups: [],
           classDate: new Date().toISOString().slice(0, 10),
           isDarkMode: false,
           students: [],
@@ -127,6 +127,37 @@
         }
       },
       methods: {
+        fetchModulesAndClasses() {
+          fetch('/api/teacher/modules-classes')
+            .then(res => {
+              if (!res.ok) {
+                throw new Error('Network response was not ok: ' + res.status);
+              }
+              return res.json();
+            })
+            .then(data => {
+              if (data.modules && data.groups) {
+                // Ensure arrays with unique values
+                this.teacherModules = [...new Set(data.modules)];
+                this.availableGroups = [...new Set(data.groups)];
+                
+                // Set default selections if available
+                if (this.teacherModules.length > 0) {
+                  this.module = this.teacherModules[0];
+                }
+                if (this.availableGroups.length > 0) {
+                  this.group = this.availableGroups[0];
+                }
+              } else {
+                console.error('Failed to load modules and classes data:', data);
+                alert('Could not load your classes and modules. Please try logging in again.');
+              }
+            })
+            .catch(err => {
+              console.error('Error fetching modules and classes:', err);
+              alert('Error loading your classes and modules: ' + err.message);
+            });
+        },
         toggleDarkMode() {
           this.isDarkMode = !this.isDarkMode;
           localStorage.setItem("darkMode", this.isDarkMode);
@@ -205,6 +236,9 @@
           this.isDarkMode = true;
           document.body.classList.add("dark-mode");
         }
+        
+        // Fetch modules and classes when component is created
+        this.fetchModulesAndClasses();
       },
       beforeUnmount() {
         if (this.timerInterval) {

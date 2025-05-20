@@ -18,6 +18,7 @@ class Teacher(db.Model):
     TeacherPassword = db.Column(db.String(120))
 
     subjects = db.relationship('Subject', backref='teacher', cascade='all, delete', passive_deletes=True)
+    teachings = db.relationship('Teaching9', backref='teacher', cascade='all, delete', passive_deletes=True)
 
     def __init__(self, TeacherFirstName, TeacherLastName, TeacherEmail, Password):
         self.TeacherFirstName = TeacherFirstName
@@ -38,9 +39,21 @@ class Class(db.Model):
 
     subjects = db.relationship('Subject', backref='class_', cascade='all, delete', passive_deletes=True)
     students = db.relationship('Student', backref='class_', cascade='all, delete', passive_deletes=True)
+    teachings = db.relationship('Teaching9', backref='class_', cascade='all, delete', passive_deletes=True)
 
     def __init__(self, ClassName):
         self.ClassName = ClassName
+
+class Teaching9(db.Model):
+    TeachingID = db.Column(db.Integer, primary_key=True)
+    TeacherIDInTeaching = db.Column(db.Integer, db.ForeignKey('teacher.TeacherID', ondelete='CASCADE'))
+    ClassIDInTeaching = db.Column(db.Integer, db.ForeignKey('class.ClassID', ondelete='CASCADE'))
+
+
+
+    def __init__(self, TeacherIDInTeaching, ClassIDInTeaching):
+        self.TeacherIDInTeaching = TeacherIDInTeaching
+        self.ClassIDInTeaching = ClassIDInTeaching
 
 
 class Subject(db.Model):
