@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="style.css">
   <style>
     /* Error Popup Styles */
     .error-popup {
@@ -73,14 +74,16 @@
           :class="{ active: userType === 'Teacher' }"
           @click.prevent="userType = 'Teacher'"
         >
-          👨‍🏫 Teacher
+          <span>👨‍🏫</span>
+          <span>Teacher</span>
         </button>
         <button
           class="toggle-mode"
           :class="{ active: userType === 'Student' }"
           @click.prevent="userType = 'Student'"
         >
-          👨‍🎓 Student
+          <span>👨‍🎓</span>
+          <span>Student</span>
         </button>
       </div>
       
@@ -149,6 +152,16 @@
         <button class="close-btn" @click="showErrorPopup = false">×</button>
         {{ errorMessage }}
       </div>
+      <div style="text-align:center; margin-top: 6px;">
+        <span>Already registered?</span>
+        <button
+          type="button"
+          class="button"
+          style="width:auto; margin-left:8px; padding: 6px 18px; font-size: 1em;"
+          @click="goToLogin"
+        >Go to Login</button>
+      </div>
+
     </div>
   </section>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -176,6 +189,15 @@
         };
       },
       methods: {
+        goToLogin() {
+        
+          if (this.userType === 'Teacher') {
+            window.location.href = "/teacher-login";
+          } else {
+            window.location.href = "/";
+          }
+        },
+
         handleImageUpload(event) {
           const file = event.target.files[0];
           if (file) {
