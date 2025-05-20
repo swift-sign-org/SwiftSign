@@ -1,10 +1,10 @@
-/* Reset and base styling */
+/*eset and base styling */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
-  color: #fff; /* Default text color to white */
+/* Default text color to white */
 }
 
 /* Background and centering */
@@ -17,6 +17,9 @@ section {
   background: url("bg.jpg") no-repeat center center;
   background-size: cover;
   animation: animatebg 5s linear infinite;
+  color: #fff;
+
+
 }
 
 @keyframes animatebg {
@@ -40,6 +43,7 @@ section {
   align-items: center;
   backdrop-filter: blur(15px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
 }
 
 /* Form layout */
@@ -107,7 +111,7 @@ h2 {
 }
 
 .button:hover {
-  background: #f0f0f0;
+  background: #f0f0f04d;
 }
 
 /* Upload image section */
@@ -158,7 +162,7 @@ h2 {
 }
 
 .static-pic:hover {
-  transform: scale(1.1);
+  transform: scaleX(-1);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
 }
 
@@ -195,4 +199,63 @@ h2 {
   color: #000;
   box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
   z-index: 2;
+}
+
+
+
+
+
+/* Camera section */
+
+.camera-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: #00000000;
+  width: 75%;
+  height: 75%;
+  margin: 0 auto; 
+  border-radius: 15%;
+  animation: animatebg01 5s linear infinite;
+}
+
+@keyframes animatebg01 {
+  0% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+
+.camera-section video {
+    border-radius: 15%;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+
+
+  z-index: 15;
+  filter: none !important;
+  box-shadow: none !important;
+  background: none;
+  border: none;
+}
+.camera-section video {
+  transform: scaleX(-1); /* Flip video horizontally */
+}
+
+.camera-section img {
+  transform: scaleX(-1); /* Flip video horizontally */
+  width: 75%;
+  height: 75%;
+}
+
+.camera-section img {
+  border-radius: 15%;
+  z-index: 10;
+  filter: none !important;
+  box-shadow: none !important;
+  background: none;
+  border: none;
 }

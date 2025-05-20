@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Face Recognition Login</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="style.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body>
   <div id="app">
-    <div class="container">
+    <section>
       <div class="login-box">
         <form @submit.prevent>
-          <h2 class="title">Face Recognition Login</h2>
+          <h2 class="title">Face Recognition</h2>
 
           <!-- Video Feed for Camera -->
-          <video id="video" width="320" height="240" autoplay playsinline></video>
-          
-          <!-- Canvas for Capturing Image -->
-          <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+          <div class="camera-section">
+            <video id="video" width="320" height="240" autoplay playsinline></video>
+            <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
 
           <!-- Captured Image -->
           <img
@@ -27,6 +27,10 @@
             alt="Captured Photo"
             class="static-pic"
           />
+          </div>
+
+          
+          <!-- Canvas for Capturing Image -->
 
           <!-- Camera Buttons -->
           <button
@@ -72,7 +76,7 @@
           </div>
         </form>
       </div>
-    </div>
+ 
   </div>
     <!-- Vue.js -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>  
@@ -268,5 +272,6 @@
           }
         });
       </script>
+      
   </body>
   
