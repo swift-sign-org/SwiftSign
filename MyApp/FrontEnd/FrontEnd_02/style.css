@@ -44,13 +44,13 @@ section {
   align-items: center;
   backdrop-filter: blur(15px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  animation: animatebg01 5s linear infinite;
+  animation: animatebg02 5s linear infinite;
 
 
 
 }
 
-@keyframes animatebg01 {
+@keyframes animatebg02 {
   0% {
     filter: hue-rotate(360deg);
   }
