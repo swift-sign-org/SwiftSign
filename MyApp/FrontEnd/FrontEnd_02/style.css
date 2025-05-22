@@ -44,7 +44,7 @@ section {
   align-items: center;
   backdrop-filter: blur(15px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  animation: animatebg02 5s linear infinite;
+  animation: animatebg033 5s linear infinite;
 
 
 
@@ -118,6 +118,7 @@ h2 {
   font-weight: 500;
   transition: background 0.3s ease;
   color: #000; /* Button text color */
+  margin: 5px;
 }
 
 .button:hover {

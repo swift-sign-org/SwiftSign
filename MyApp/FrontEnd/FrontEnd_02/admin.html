@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لوحة تحكم الإدمن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to left, #3a6186, #89253e);
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    #app {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .tabs button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      transition: 0.3s;
+      min-width: 90px;
+    }
+
+    .tabs button.active {
+      background: #fff;
+      color: #000;
+    }
+
+    form, .list-section {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .button {
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .button:hover {
+      background: #eee;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    li {
+      margin: 8px 0;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .radio {
+      accent-color: #fff;
+      cursor: pointer;
+    }
+
+    /* Scrollbar style for list */
+    ul::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ul::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+
+    ul::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.3);
+      border-radius: 10px;
+    }
+    input[type="checkbox"].radio {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #fff; /* لون الـ checkbox */
+    border-radius: 4px; /* حواف مستديرة */
+    margin: 0; /* إزالة هوامش غير مرغوبة */
+    }
+
+    /* تأكد من أن التسمية (label) محاذاة بشكل جيد */
+    label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none; /* لمنع تحديد النص عند الضغط */
+    }
+
+    /* مسافة بين العناصر داخل قائمة التلاميذ */
+    ul li {
+    margin-bottom: 10px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h2>لوحة تحكم الإدمن</h2>
+
+    <div class="tabs">
+      <button :class="{ active: view === 'classes' }" @click="view = 'classes'">الأقسام</button>
+      <button :class="{ active: view === 'subjects' }" @click="view = 'subjects'">المواد</button>
+      <button :class="{ active: view === 'teachers' }" @click="view = 'teachers'">الأساتذة</button>
+      <button :class="{ active: view === 'students' }" @click="view = 'students'">التلاميذ</button>
+    </div>
+
+    <!-- الأقسام -->
+    <form v-if="view === 'classes'" @submit.prevent="addClass">
+      <h3>إضافة قسم</h3>
+      <input v-model="newClass" placeholder="اسم القسم" required>
+      <button class="button">إضافة</button>
+
+      <div class="list-section" v-if="classes.length">
+        <h4>الأقسام المسجلة</h4>
+        <ul>
+          <li v-for="(cls, index) in classes" :key="index">
+            {{ cls }}
+            <button class="button" @click.prevent="deleteClass(index)" style="background:#c0392b; font-size:14px;">حذف</button>
+          </li>
+        </ul>
+      </div>
+    </form>
+
+    <!-- المواد -->
+    <form v-if="view === 'subjects'" @submit.prevent="addSubject">
+      <h3>إضافة مادة</h3>
+      <input v-model="newSubject.name" placeholder="اسم المادة" required>
+      <select v-model="newSubject.className" required>
+        <option disabled value="">اختر قسم</option>
+        <option v-for="cls in classes" :key="cls">{{ cls }}</option>
+      </select>
+      <button class="button">إضافة</button>
+
+      <div class="list-section" v-if="subjects.length">
+        <h4>المواد المسجلة</h4>
+        <ul>
+          <li v-for="(subj, index) in subjects" :key="index">
+            {{ subj.name }} - {{ subj.className }}
+            <button class="button" @click.prevent="deleteSubject(index)" style="background:#c0392b; font-size:14px;">حذف</button>
+          </li>
+        </ul>
+      </div>
+    </form>
+
+    <!-- الأساتذة -->
+    <div v-if="view === 'teachers'" class="list-section">
+    <h3>الأساتذة</h3>
+    <table style="width: 100%; border-collapse: collapse; color: #fff;">
+        <thead>
+        <tr>
+            <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">اسم الأستاذ</th>
+            <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">القسم</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(teacher, index) in teachers" :key="index">
+            <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+            {{ teacher.name }}
+            </td>
+            <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+            <select v-model="teachers[index].class" style="width: 100%; padding: 6px; border-radius: 6px; border: none;">
+                <option value="">غير معين</option>
+                <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
+            </select>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    
+  <button class="button" style="margin-top: 15px;" @click="saveTeachersClasses">
+    حفظ التعديلات
+  </button>
+    </div>
+
+
+<!-- التلاميذ -->
+<div v-if="view === 'students'" class="list-section">
+  <h3>التلاميذ</h3>
+
+  <!-- اختيار القسم -->
+  <select v-model="selectedClassFilter" style="margin-bottom: 20px; width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 16px;">
+    <option disabled value="">اختر قسماً لعرض تلاميذه</option>
+    <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
+  </select>
+
+  <!-- جدول التلاميذ حسب القسم -->
+  <table v-if="filteredStudents.length" style="width: 100%; border-collapse: collapse; text-align: center;">
+    <thead>
+      <tr style="background-color: rgba(255,255,255,0.2);">
+        <th>اختيار</th>
+        <th>الاسم</th>
+        <th>القسم</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(student, index) in filteredStudents" :key="index">
+        <td>
+          <input type="checkbox" class="radio" :value="student" v-model="selectedStudents">
+        </td>
+        <td>{{ student.name }}</td>
+        <td>{{ student.class }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div v-else style="text-align:center; margin-top:20px;">
+    لا يوجد تلاميذ في هذا القسم.
+  </div>
+
+  <!-- اختيار الأستاذ -->
+  <select v-model="selectedTeacher" style="margin-top: 20px; width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 16px;">
+    <option disabled value="">اختر أستاذ لتعيينه لنفس قسم التلميذ</option>
+    <option v-for="(teacher, index) in teachers" :value="index" :key="index">{{ teacher.name }}</option>
+  </select>
+
+  <button class="button" style="margin-top: 15px;" @click="assignTeacher">
+    تعيين الأستاذ للقسم
+  </button>
+</div>
+
+
+    </div>
+
+  <!-- Vue.js CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp } = Vue;
+    createApp({
+      data() {
+        return {
+          view: 'classes',
+          newClass: '',
+          newSubject: { name: '', className: '' },
+          classes: [],
+          subjects: [],
+          teachers: [
+            { name: 'أ. يوسف سعدي', class: '' },
+            { name: 'أ. فاطمة مراد', class: '' }
+          ],
+          students: [
+            { name: ' assil', class: '4A' },
+            { name: 'ahmed', class: '4B' }
+          ],
+          selectedStudents: [],
+          selectedTeacher: null
+        }
+      },
+      methods: {
+        addClass() {
+          const newC = this.newClass.trim();
+          if (newC && !this.classes.includes(newC)) {
+            this.classes.push(newC);
+            this.newClass = '';
+            this.saveData();
+            alert('تم إضافة القسم');
+          } else if (this.classes.includes(newC)) {
+            alert('هذا القسم موجود بالفعل');
+          }
+        },
+        deleteClass(index) {
+          // حذف القسم
+          const removed = this.classes.splice(index, 1)[0];
+          // حذف المواد المرتبطة بهذا القسم
+          this.subjects = this.subjects.filter(s => s.className !== removed);
+          this.saveData();
+        },
+        addSubject() {
+          const name = this.newSubject.name.trim();
+          const className = this.newSubject.className;
+          if (name && className) {
+            this.subjects.push({ name, className });
+            this.newSubject.name = '';
+            this.newSubject.className = '';
+            this.saveData();
+            alert('تمت إضافة المادة');
+          }
+        },
+        deleteSubject(index) {
+          this.subjects.splice(index, 1);
+          this.saveData();
+        },
+        assignTeacher() {
+          if (this.selectedStudents.length > 0 && this.selectedTeacher !== null) {
+            const teacher = this.teachers[this.selectedTeacher];
+            // نعيّن القسم للأستاذ بناء على أول تلميذ محدد (لتبسيط المنطق)
+            // أو يمكن تعديل المنطق لتعيين لأقسام متعددة حسب الحاجة
+            teacher.class = this.selectedStudents[0].class;
+            alert(`تم تعيين ${teacher.name} للقسم ${teacher.class}`);
+            this.selectedTeacher = null;
+            this.selectedStudents = [];
+          } else {
+            alert('يرجى اختيار تلميذ واحد على الأقل وأستاذ');
+          }
+        },
+        saveData() {
+          localStorage.setItem('classes', JSON.stringify(this.classes));
+          localStorage.setItem('subjects', JSON.stringify(this.subjects));
+        },
+        loadData() {
+          const savedClasses = localStorage.getItem('classes');
+          const savedSubjects = localStorage.getItem('subjects');
+          if (savedClasses) {
+            this.classes = JSON.parse(savedClasses);
+          }
+          if (savedSubjects) {
+            this.subjects = JSON.parse(savedSubjects);
+          }
+        }
+      },
+      mounted() {
+        this.loadData();
+      },
+        getSubjectsByClass(className) {
+    if (!className) return [];
+    return this.subjects.filter(subject => subject.className === className);
+  },
+
+  saveTeachersClasses() {
+    alert('تم حفظ تعيينات الأساتذة للأقسام بنجاح!');
+  }
+    }).mount('#app');
+  </script>
+</body>
+</html>
