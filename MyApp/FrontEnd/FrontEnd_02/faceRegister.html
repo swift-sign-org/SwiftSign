@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Registration</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <section>
+      <div class="login-box">
+        <form @submit.prevent>
+          <h2 class="title">Face Registration</h2>
+
+          <!-- Video Feed for Camera -->
+          <div class="camera-section">
+            <video id="video" width="320" height="240" autoplay playsinline></video>
+            <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+
+          <!-- Captured Image -->
+          <img
+            v-if="photoTaken && !isCameraActive"
+            :src="profileImage"
+            alt="Captured Photo"
+            class="static-pic"
+          />
+          </div>
+
+          
+          <!-- Canvas for Capturing Image -->
+
+          <!-- Camera Buttons -->
+          <button
+            type="button"
+            class="button"
+            @click="toggleCamera"
+            v-if="!photoTaken || isCameraActive"
+          >
+            <i class="bi" :class="isCameraActive ? 'bi-camera' : 'bi-camera-fill'"></i>
+            [[ isCameraActive ? 'Take Picture' : 'Start Camera' ]]
+          </button>
+
+          <!-- Submit / Retake Buttons -->
+          <div class="buttons-container" v-if="photoTaken && !isCameraActive">
+            <button
+              type="button"
+              class="button"
+              @click="submitPhoto"
+              :disabled="isSubmitting"
+            >
+              <i class="bi bi-send"></i>
+              [[ isSubmitting ? 'Sending...' : 'Submit Photo' ]]
+            </button>
+
+            <button
+              type="button"
+              class="button"
+              @click="retakePhoto"
+              :disabled="isSubmitting"
+            >
+              <i class="bi bi-arrow-counterclockwise"></i>
+              Retake
+            </button>
+          </div>
+
+          <!-- Messages -->
+          <div class="message success" v-if="showStatus">
+            ✅ [[ statusMessage ]]
+          </div>
+
+          <div class="message error" v-if="showError">
+            ❌ [[ errorMessage ]]
+          </div>
+        </form>
+      </div>
+ 
+  </div>
+    <!-- Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>  
+    <script>
+        new Vue({
+          el: '#app',
+          delimiters: ['[[', ']]'], // Change Vue delimiters to avoid conflict with Jinja
+
+          data() {
+            return {
+              isDarkMode: false,
+              showStatus: false,
+              isCameraActive: false,
+              photoTaken: false,
+              stream: null,
+              profileImage: "https://via.placeholder.com/120",
+              isSubmitting: false,
+              showError: false,
+              errorMessage: '',
+              statusMessage: 'Photo captured successfully!',
+              studentName: "Loading...",
+              studentId: "Loading...",
+              authMethod: 'face', // 'face' or 'fingerprint'
+            };
+          },
+          created() {
+            // Check if a dark mode preference is saved
+            const savedMode = localStorage.getItem("darkMode");
+            if (savedMode === "true") {
+              this.isDarkMode = true;
+              document.body.classList.add("dark-mode");
+            }
+            
+            // Get student_id from the template parameter or try session
+            const urlParams = new URLSearchParams(window.location.search);
+            this.studentId = "{{ student_id }}" || urlParams.get('student_id');
+            
+            if (!this.studentId || this.studentId === "{{ student_id }}") {
+              // If not found, try to get it through API
+              this.fetchStudentInfo();
+            }
+          },
+          methods: {
+            // Fetch student information from session
+            async fetchStudentInfo() {
+              try {
+                const response = await fetch("/api/students/current");
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.student) {
+                    this.studentName = data.student.name || "Unknown Student";
+                    this.studentId = data.student.id || "ID Unknown";
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching student info:", error);
+              }
+            },
+            
+            toggleDarkMode() {
+              this.isDarkMode = !this.isDarkMode;
+              localStorage.setItem("darkMode", this.isDarkMode);
+              document.body.classList.toggle("dark-mode", this.isDarkMode);
+            },
+    
+            showErrorMessage(message) {
+              this.errorMessage = message;
+              this.showError = true;
+              
+              // Auto-hide error after 5 seconds
+              setTimeout(() => {
+                this.showError = false;
+              }, 5000);
+            },
+    
+            toggleCamera() {
+              const video = document.getElementById('video');
+              const canvas = document.getElementById('canvas');
+              const context = canvas.getContext('2d');
+    
+              // Start camera
+              if (!this.isCameraActive) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                .then((stream) => {
+                    this.stream = stream;
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    this.isCameraActive = true;
+                  })
+                  .catch((err) => {
+                    console.error("Error accessing webcam: ", err);
+                    this.showErrorMessage("Could not access the webcam. Please check your camera permissions.");
+                  });
+              }
+              // Take picture
+              else {
+                context.drawImage(video, 0, 0, 320, 240);
+                const imageDataURL = canvas.toDataURL('image/png');
+                this.profileImage = imageDataURL;
+                this.photoTaken = true;
+    
+                // Show status
+                this.statusMessage = "Photo captured successfully!";
+                this.showStatus = true;
+    
+                // Stop camera
+                if (this.stream) {
+                  this.stream.getTracks().forEach(track => track.stop());
+                }
+                video.style.display = 'none';
+                this.isCameraActive = false;
+    
+                // Hide status after a few seconds
+                setTimeout(() => {
+                  this.showStatus = false;
+                }, 3000);
+              }
+            },
+            
+            retakePhoto() {
+              // Reset photo state and activate camera again
+              this.photoTaken = false;
+              this.showStatus = false;
+              
+              // Start camera again
+              this.toggleCamera();
+            },
+    
+            async submitPhoto() {
+  if (this.isSubmitting) return;
+  
+  this.isSubmitting = true;
+  
+  try {
+    // Get student_id from URL parameter, session, or fallback to session
+    const studentId = "{{ student_id }}" || session.get('pending_face_registration');
+    
+    if (!studentId) {
+      this.showErrorMessage("Student ID not found. Please register again.");
+      return;
+    }
+    
+    // Call the API endpoint to save the photo with face vector
+    const response = await fetch(`/api/students/${studentId}/photo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        photo: this.profileImage.split(',')[1] // Remove data:image/png;base64, prefix
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      this.statusMessage = data.message || "Photo saved successfully!";
+      this.showStatus = true;
+      
+      // Redirect to login page after successful submission
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 3000);
+    } else {
+      this.showErrorMessage(data.message || "Failed to save photo.");
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    this.showErrorMessage("Failed to connect to the server.");
+  } finally {
+    this.isSubmitting = false;
+  }
+},
+    
+            async registerStudent() {
+  try {
+    const response = await fetch('/api/students', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        first_name: this.firstName,
+        last_name: this.lastName,
+        email: this.email,
+        class: this.selectedClass,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      this.successMessage = data.message;
+      this.showSuccess = true;
+      
+      // Store student_id in localStorage before redirecting
+      if (data.student_id) {
+        localStorage.setItem('student_registration_id', data.student_id);
+      }
+      
+      // Redirect to the face registration page
+      if (data.redirect_url) {
+        setTimeout(() => {
+          window.location.href = data.redirect_url;
+        }, 1500);
+      } else {
+        // Fallback to home page
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      }
+    } else {
+      this.errorMessage = data.message;
+      this.showError = true;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    this.errorMessage = 'An error occurred during registration.';
+    this.showError = true;
+  }
+},
+    
+            async loginStudent() {
+  try {
+    const response = await fetch('/api/students/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: this.email,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok || (data.needs_face_registration && data.redirect_url)) {
+      this.successMessage = data.message;
+      this.showSuccess = true;
+      
+      // If student needs to complete face registration
+      if (data.needs_face_registration && data.redirect_url) {
+        // Store student_id in localStorage before redirecting
+        if (data.student_id) {
+          localStorage.setItem('student_registration_id', data.student_id);
+        }
+        
+        setTimeout(() => {
+          window.location.href = data.redirect_url;
+        }, 1500);
+      } else {
+        // Normal login - redirect to attendance page
+        setTimeout(() => {
+          window.location.href = '/student/attendance';
+        }, 1500);
+      }
+    } else {
+      this.errorMessage = data.message;
+      this.showError = true;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    this.errorMessage = 'An error occurred during login.';
+    this.showError = true;
+  }
+}
+          }
+        });
+      </script>
+      
+  </body>
+</html>

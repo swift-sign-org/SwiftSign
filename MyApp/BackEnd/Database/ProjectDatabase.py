@@ -1,7 +1,7 @@
 import json
 import bcrypt
 from flask_sqlalchemy import SQLAlchemy
-# from MyApp.AI_Integration.face_recognition import get_face_vector
+from MyApp.AI_Integration.face_recognition import get_arcface_vector
 
 
 db = SQLAlchemy()
@@ -82,10 +82,12 @@ class Student(db.Model):
         self.StudentEmail = StudentEmail
 
     def set_face_vector(self, ImagePath):
-        # embedding = self.get_face_vector(ImagePath)
-        # self.StudentFaceVector = json.dumps(embedding)
-        
-        self.StudentFaceVector = json.dumps(ImagePath)
+        embedding = get_arcface_vector(ImagePath)
+        if embedding:
+            self.StudentFaceVector = json.dumps(embedding)
+        else:
+            raise ValueError("Could not extract face vector from image")
+            
     def get_face_vector(self):
         if self.StudentFaceVector:
             return json.loads(self.StudentFaceVector)

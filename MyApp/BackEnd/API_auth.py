@@ -5,6 +5,7 @@ import tempfile
 import logging
 
 from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject
+from MyApp.AI_Integration.face_recognition import get_arcface_vector
 
 
 api_bp = blueprints.Blueprint('api', __name__)
@@ -69,6 +70,16 @@ def student_login():
         student = Student.query.filter_by(StudentEmail=student_email).first()
         if not student:
             return jsonify({"message": "Invalid credentials: Invalid email"}), 401
+
+        # Check if student has registered their face
+        if not student.get_face_vector():
+            # Store student_id in session for face registration
+            session['pending_face_registration'] = student.StudentID
+            return jsonify({
+                "message": "Please complete your registration by taking a photo.",
+                "needs_face_registration": True,
+                "redirect_url": f'/register/face?student_id={student.StudentID}'
+            }), 200
 
         # Check if attendance is active
         if not attendance_session['active']:
@@ -143,9 +154,13 @@ def student_register():
         db.session.add(new_student)
         db.session.commit()
         
+        # Store student_id in session for face registration
+        session['pending_face_registration'] = new_student.StudentID
+        
         return jsonify({
             'message': 'Registration successful! Please take your photo.',
-            'student_id': new_student.StudentID
+            'student_id': new_student.StudentID,
+            'redirect_url': f'/register/face?student_id={new_student.StudentID}'
         }), 200
     except Exception as e:
         print(e)
@@ -175,6 +190,10 @@ def student_register_photo(student_id):
             student.set_face_vector(temp_path)
             db.session.commit()
             
+            # Clear the pending_face_registration from session
+            if session.get('pending_face_registration') == student_id:
+                session.pop('pending_face_registration', None)
+                
             return jsonify({'message': 'Photo saved successfully!'}), 200
         except Exception as e:
             print(f"Face vector extraction error: {e}")

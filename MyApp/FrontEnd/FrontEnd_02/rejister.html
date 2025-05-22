@@ -302,19 +302,18 @@
               if (data.student_id) {
                 localStorage.setItem('student_registration_id', data.student_id);
                 
-                // Upload photo if available
-                if (this.form.picture) {
-                  return this.uploadStudentPhoto(data.student_id);
-                }
+                this.message = data.message || 'Registration successful!';
+                this.messageType = 'success';
+                
+                // Redirect to face registration page instead of login
+                setTimeout(() => {
+                  window.location.href = `/register/face?student_id=${data.student_id}`;
+                }, 1500);
+                return;
               }
               
               this.message = data.message || 'Registration successful!';
               this.messageType = 'success';
-              
-              setTimeout(() => {
-                // Redirect to student login
-                window.location.href = "/";
-              }, 1500);
             } else {
               this.showErrorMessage(data.message || "Registration failed.");
             }
@@ -326,7 +325,8 @@
           }
         },
         async uploadStudentPhoto(studentId) {
-          // Extract base64 data from the picture (remove the data:image/... prefix)
+          // This function is now obsolete as we're redirecting to the face registration page
+          // We'll keep it in case we need to revert, but it won't be called
           const base64Data = this.form.picture.split(',')[1];
           
           try {
@@ -345,7 +345,7 @@
               this.messageType = 'success';
               
               setTimeout(() => {
-                window.location.href = "/";
+                window.location.href = "/register/face";
               }, 1500);
             } else {
               this.showErrorMessage(data.message || "Photo upload failed.");
@@ -355,7 +355,7 @@
             this.showErrorMessage("Registration completed but photo upload failed.");
             
             setTimeout(() => {
-              window.location.href = "/";
+              window.location.href = "/register/face";
             }, 3000);
           }
         },
