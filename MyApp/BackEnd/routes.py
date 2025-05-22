@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, session, flash
+from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from MyApp.BackEnd.Database.ProjectDatabase import Student, db
 from MyApp.BackEnd.API_auth import attendance_session  # Import the attendance session state
 
@@ -8,6 +8,21 @@ routes_blueprint = Blueprint('routes', __name__)
 @routes_blueprint.route('/register')
 def teacher_register():
     return render_template('rejister.html')
+
+
+@routes_blueprint.route('/register/face')
+def register_face():
+    # Check if student_id exists in the request or session
+    student_id = request.args.get('student_id') or session.get('pending_face_registration')
+    
+    if not student_id:
+        flash('Please complete registration first', 'error')
+        return redirect(url_for('routes.student_login'))
+        
+    # Store the student_id in session to keep it available for the API call
+    session['pending_face_registration'] = student_id
+    
+    return render_template('faceRegister.html', student_id=student_id)
 
 
 
