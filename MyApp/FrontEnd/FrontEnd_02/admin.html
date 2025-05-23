@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>لوحة تحكم الإدمن</title>
+  
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
     * {
@@ -109,11 +109,16 @@
       align-items: center;
       gap: 10px;
       flex: 1;
+      user-select: none;
     }
 
-    .radio {
-      accent-color: #fff;
+    input[type="checkbox"].radio {
+      width: 18px;
+      height: 18px;
       cursor: pointer;
+      accent-color: #fff;
+      border-radius: 4px;
+      margin: 0;
     }
 
     /* Scrollbar style for list */
@@ -130,256 +135,520 @@
       background: rgba(255,255,255,0.3);
       border-radius: 10px;
     }
-    input[type="checkbox"].radio {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #fff; /* لون الـ checkbox */
-    border-radius: 4px; /* حواف مستديرة */
-    margin: 0; /* إزالة هوامش غير مرغوبة */
-    }
 
-    /* تأكد من أن التسمية (label) محاذاة بشكل جيد */
-    label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    user-select: none; /* لمنع تحديد النص عند الضغط */
-    }
-
-    /* مسافة بين العناصر داخل قائمة التلاميذ */
     ul li {
-    margin-bottom: 10px;
+      margin-bottom: 10px;
     }
 
   </style>
 </head>
 <body>
   <div id="app">
-    <h2>لوحة تحكم الإدمن</h2>
+    <h2>Control Panel</h2>
 
-    <div class="tabs">
-      <button :class="{ active: view === 'classes' }" @click="view = 'classes'">الأقسام</button>
-      <button :class="{ active: view === 'subjects' }" @click="view = 'subjects'">المواد</button>
-      <button :class="{ active: view === 'teachers' }" @click="view = 'teachers'">الأساتذة</button>
-      <button :class="{ active: view === 'students' }" @click="view = 'students'">التلاميذ</button>
+    <!-- Add Export/Import, Search, and Reset Data buttons above the tabs -->
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
+    <button class="button" @click="exportData">Export Data</button>
+    <label class="button" style="margin:0;">
+        Import Data
+        <input type="file" @change="importData" style="display:none;">
+    </label>
+    <button class="button" @click="resetData" style="background:#c0392b; color:#fff;">Reset All Data</button>
     </div>
 
-    <!-- الأقسام -->
+
+    <div class="tabs">
+      <button :class="{ active: view === 'classes' }" @click="view = 'classes'">Class</button>
+      <button :class="{ active: view === 'subjects' }" @click="view = 'subjects'">Subject</button>
+      <button :class="{ active: view === 'teachers' }" @click="view = 'teachers'">Teachers</button>
+      <button :class="{ active: view === 'students' }" @click="view = 'students'">Students</button>
+      <button :class="{ active: view === 'stats' }" @click="view = 'stats'">Stats</button>
+    </div>
+
+    <!-- Classes -->
     <form v-if="view === 'classes'" @submit.prevent="addClass">
-      <h3>إضافة قسم</h3>
-      <input v-model="newClass" placeholder="اسم القسم" required>
-      <button class="button">إضافة</button>
+      <h3>Add Class</h3>
+      <input v-model="newClass" placeholder="Class name" required>
+      <button class="button">Add</button>
 
       <div class="list-section" v-if="classes.length">
-        <h4>الأقسام المسجلة</h4>
+        <h4>Registered Classes</h4>
         <ul>
           <li v-for="(cls, index) in classes" :key="index">
             {{ cls }}
-            <button class="button" @click.prevent="deleteClass(index)" style="background:#c0392b; font-size:14px;">حذف</button>
+            <button class="button" @click.prevent="deleteClass(index)" style="background:#c0392b; font-size:14px;">Delete</button>
           </li>
         </ul>
       </div>
     </form>
 
-    <!-- المواد -->
+    <!-- Subjects -->
     <form v-if="view === 'subjects'" @submit.prevent="addSubject">
-      <h3>إضافة مادة</h3>
-      <input v-model="newSubject.name" placeholder="اسم المادة" required>
+      <h3>Add Subject</h3>
+      <input v-model="newSubject.name" placeholder="Subject name" required>
       <select v-model="newSubject.className" required>
-        <option disabled value="">اختر قسم</option>
-        <option v-for="cls in classes" :key="cls">{{ cls }}</option>
+        <option disabled value="">Select class</option>
+        <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
       </select>
-      <button class="button">إضافة</button>
+      <button class="button">Add</button>
 
       <div class="list-section" v-if="subjects.length">
-        <h4>المواد المسجلة</h4>
+        <h4>Registered Subjects</h4>
         <ul>
           <li v-for="(subj, index) in subjects" :key="index">
             {{ subj.name }} - {{ subj.className }}
-            <button class="button" @click.prevent="deleteSubject(index)" style="background:#c0392b; font-size:14px;">حذف</button>
+            <button class="button" @click.prevent="deleteSubject(index)" style="background:#c0392b; font-size:14px;">Delete</button>
           </li>
         </ul>
       </div>
     </form>
 
-    <!-- الأساتذة -->
-    <div v-if="view === 'teachers'" class="list-section">
-    <h3>الأساتذة</h3>
-    <table style="width: 100%; border-collapse: collapse; color: #fff;">
-        <thead>
-        <tr>
-            <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">اسم الأستاذ</th>
-            <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">القسم</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(teacher, index) in teachers" :key="index">
-            <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
-            {{ teacher.name }}
-            </td>
-            <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
-            <select v-model="teachers[index].class" style="width: 100%; padding: 6px; border-radius: 6px; border: none;">
-                <option value="">غير معين</option>
-                <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
-            </select>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    
-  <button class="button" style="margin-top: 15px;" @click="saveTeachersClasses">
-    حفظ التعديلات
+   <!-- Teachers Table -->
+<!-- Teachers Table -->
+<div v-if="view === 'teachers'" class="list-section">
+  <h3>Teachers</h3>
+  <button class="button" style="margin-bottom: 10px;" @click="showAddTeacher = !showAddTeacher">
+    {{ showAddTeacher ? 'Cancel' : 'Add Teacher' }}
   </button>
-    </div>
-
-
-<!-- التلاميذ -->
-<div v-if="view === 'students'" class="list-section">
-  <h3>التلاميذ</h3>
-
-  <!-- اختيار القسم -->
-  <select v-model="selectedClassFilter" style="margin-bottom: 20px; width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 16px;">
-    <option disabled value="">اختر قسماً لعرض تلاميذه</option>
-    <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
-  </select>
-
-  <!-- جدول التلاميذ حسب القسم -->
-  <table v-if="filteredStudents.length" style="width: 100%; border-collapse: collapse; text-align: center;">
+  <form v-if="showAddTeacher" @submit.prevent="addTeacher" style="margin-bottom: 15px;">
+    <input v-model="newTeacher.name" placeholder="Teacher name" required>
+    <select v-model="newTeacher.class" required>
+      <option value="">Unassigned</option>
+      <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
+    </select>
+    <button class="button" type="submit">Add</button>
+  </form>
+  <table style="width: 100%; border-collapse: collapse; color: #fff;">
     <thead>
-      <tr style="background-color: rgba(255,255,255,0.2);">
-        <th>اختيار</th>
-        <th>الاسم</th>
-        <th>القسم</th>
+      <tr>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Teacher Name</th>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Class</th>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Subjects</th>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(student, index) in filteredStudents" :key="index">
-        <td>
-          <input type="checkbox" class="radio" :value="student" v-model="selectedStudents">
+      <tr v-for="(teacher, tIndex) in teachers" :key="tIndex">
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+          <span v-if="editTeacherIndex !== tIndex">{{ teacher.name }}</span>
+          <input v-else v-model="editTeacherData.name" required>
         </td>
-        <td>{{ student.name }}</td>
-        <td>{{ student.class }}</td>
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+          <span v-if="editTeacherIndex !== tIndex">{{ teacher.class }}</span>
+          <select v-else v-model="editTeacherData.class" required>
+            <option value="">Unassigned</option>
+            <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
+          </select>
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+          <div v-if="editTeacherIndex !== tIndex">
+            <ul style="margin:0; padding:0; list-style:none;">
+              <li v-for="subj in teacher.teachingSubjects" :key="subj">{{ subj }}</li>
+            </ul>
+          </div>
+          <div v-else>
+            <div v-for="subject in subjectsByClass(editTeacherData.class)" :key="subject.name" style="margin-bottom: 4px;">
+              <label style="cursor: pointer;">
+                <input type="checkbox"
+                  :checked="editTeacherData.teachingSubjects && editTeacherData.teachingSubjects.includes(subject.name)"
+                  @change="toggleEditTeachingSubject(subject.name, $event.target.checked)" />
+                {{ subject.name }}
+              </label>
+            </div>
+          </div>
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+          <button class="button" v-if="editTeacherIndex !== tIndex" @click="editTeacher(tIndex)" style="background:#2980b9; font-size:14px;">Edit</button>
+          <button class="button" v-if="editTeacherIndex === tIndex" @click="saveTeacherEdit(tIndex)" style="background:#27ae60; font-size:14px;">Save</button>
+          <button class="button" v-if="editTeacherIndex === tIndex" @click="cancelTeacherEdit" style="background:#7f8c8d; font-size:14px;">Cancel</button>
+          <button class="button" @click="deleteTeacher(tIndex)" style="background:#c0392b; font-size:14px;">Delete</button>
+        </td>
       </tr>
     </tbody>
   </table>
-
-  <div v-else style="text-align:center; margin-top:20px;">
-    لا يوجد تلاميذ في هذا القسم.
-  </div>
-
-  <!-- اختيار الأستاذ -->
-  <select v-model="selectedTeacher" style="margin-top: 20px; width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 16px;">
-    <option disabled value="">اختر أستاذ لتعيينه لنفس قسم التلميذ</option>
-    <option v-for="(teacher, index) in teachers" :value="index" :key="index">{{ teacher.name }}</option>
-  </select>
-
-  <button class="button" style="margin-top: 15px;" @click="assignTeacher">
-    تعيين الأستاذ للقسم
+  <button class="button" style="margin-top: 15px;" @click="saveTeachersClassesAndSubjects">
+    Save Changes
   </button>
 </div>
 
 
-    </div>
+<!-- Students -->
+<div v-if="view === 'students'" style="margin-bottom: 10px;">
+  <input v-model="studentSearch" placeholder="Search students..." style="width: 100%; padding: 8px; border-radius: 8px; border: none;">
+</div>
+
+<div v-if="view === 'students'" class="list-section">
+  <h3>Students</h3>
+  <button class="button" style="margin-bottom: 10px;" @click="showAddStudent = !showAddStudent">
+    {{ showAddStudent ? 'Cancel' : 'Add Student' }}
+  </button>
+  <form v-if="showAddStudent" @submit.prevent="addStudent" style="margin-bottom: 15px;">
+    <input v-model="newStudent.name" placeholder="Student name" required>
+    <select v-model="newStudent.class" required>
+      <option disabled value="">Select class</option>
+      <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
+    </select>
+    <button class="button" type="submit">Add</button>
+  </form>
+  <table v-if="view === 'students'" style="width: 100%; border-collapse: collapse; color: #fff;">
+    <thead>
+        <tr>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Student Name</th>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Class</th>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Subjects</th>
+        <th style="border-bottom: 1px solid #fff; padding: 8px; text-align: right;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="(student, index) in filteredStudents" :key="index">
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+            <span v-if="editStudentIndex !== getStudentIndex(student)">{{ student.name }}</span>
+            <input v-else v-model="editStudentData.name" required>
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+            <span v-if="editStudentIndex !== getStudentIndex(student)">{{ student.class }}</span>
+            <select v-else v-model="editStudentData.class" required>
+            <option value="">Unassigned</option>
+            <option v-for="cls in classes" :key="cls" :value="cls">{{ cls }}</option>
+            </select>
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+            <ul style="margin:0; padding:0; list-style:none;">
+            <li v-for="subj in subjectsByClass(student.class)" :key="subj.name">{{ subj.name }}</li>
+            </ul>
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.3); text-align: right;">
+            <button class="button" v-if="editStudentIndex !== getStudentIndex(student)" @click="editStudent(getStudentIndex(student))" style="background:#2980b9; font-size:14px;">Edit</button>
+            <button class="button" v-if="editStudentIndex === getStudentIndex(student)" @click="saveStudentEdit(getStudentIndex(student))" style="background:#27ae60; font-size:14px;">Save</button>
+            <button class="button" v-if="editStudentIndex === getStudentIndex(student)" @click="cancelStudentEdit" style="background:#7f8c8d; font-size:14px;">Cancel</button>
+            <button class="button" @click="deleteStudent(getStudentIndex(student))" style="background:#c0392b; font-size:14px;">Delete</button>
+        </td>
+        </tr>
+    </tbody>
+</table>
+  <button class="button" style="margin-top: 15px;" @click="saveStudentsClasses">
+    Save Changes
+  </button>
+</div>
+
+<div v-if="view === 'stats'" class="list-section">
+  <h3>Statistics</h3>
+  <ul>
+    <li>Total Classes: {{ classes.length }}</li>
+    <li>Total Subjects: {{ subjects.length }}</li>
+    <li>Total Teachers: {{ teachers.length }}</li>
+    <li>Total Students: {{ students.length }}</li>
+  </ul>
+  <div v-if="classes.length">
+    <h4>Students per Class</h4>
+    <ul>
+      <li v-for="cls in classes" :key="cls">
+        {{ cls }}: {{ students.filter(s => s.class === cls).length }}
+      </li>
+    </ul>
+  </div>
+  <div v-if="teachers.length">
+    <h4>Teachers per Class</h4>
+    <ul>
+      <li v-for="cls in classes" :key="cls">
+        {{ cls }}: {{ teachers.filter(t => t.class === cls).length }}
+      </li>
+    </ul>
+  </div>
+</div>
+
 
   <!-- Vue.js CDN -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script>
-    const { createApp } = Vue;
-    createApp({
-      data() {
-        return {
-          view: 'classes',
-          newClass: '',
-          newSubject: { name: '', className: '' },
-          classes: [],
-          subjects: [],
-          teachers: [
-            { name: 'أ. يوسف سعدي', class: '' },
-            { name: 'أ. فاطمة مراد', class: '' }
-          ],
-          students: [
-            { name: ' assil', class: '4A' },
-            { name: 'ahmed', class: '4B' }
-          ],
-          selectedStudents: [],
-          selectedTeacher: null
-        }
-      },
-      methods: {
-        addClass() {
-          const newC = this.newClass.trim();
-          if (newC && !this.classes.includes(newC)) {
-            this.classes.push(newC);
-            this.newClass = '';
-            this.saveData();
-            alert('تم إضافة القسم');
-          } else if (this.classes.includes(newC)) {
-            alert('هذا القسم موجود بالفعل');
-          }
-        },
-        deleteClass(index) {
-          // حذف القسم
-          const removed = this.classes.splice(index, 1)[0];
-          // حذف المواد المرتبطة بهذا القسم
-          this.subjects = this.subjects.filter(s => s.className !== removed);
-          this.saveData();
-        },
-        addSubject() {
-          const name = this.newSubject.name.trim();
-          const className = this.newSubject.className;
-          if (name && className) {
-            this.subjects.push({ name, className });
-            this.newSubject.name = '';
-            this.newSubject.className = '';
-            this.saveData();
-            alert('تمت إضافة المادة');
-          }
-        },
-        deleteSubject(index) {
-          this.subjects.splice(index, 1);
-          this.saveData();
-        },
-        assignTeacher() {
-          if (this.selectedStudents.length > 0 && this.selectedTeacher !== null) {
-            const teacher = this.teachers[this.selectedTeacher];
-            // نعيّن القسم للأستاذ بناء على أول تلميذ محدد (لتبسيط المنطق)
-            // أو يمكن تعديل المنطق لتعيين لأقسام متعددة حسب الحاجة
-            teacher.class = this.selectedStudents[0].class;
-            alert(`تم تعيين ${teacher.name} للقسم ${teacher.class}`);
-            this.selectedTeacher = null;
-            this.selectedStudents = [];
-          } else {
-            alert('يرجى اختيار تلميذ واحد على الأقل وأستاذ');
-          }
-        },
-        saveData() {
-          localStorage.setItem('classes', JSON.stringify(this.classes));
-          localStorage.setItem('subjects', JSON.stringify(this.subjects));
-        },
-        loadData() {
-          const savedClasses = localStorage.getItem('classes');
-          const savedSubjects = localStorage.getItem('subjects');
-          if (savedClasses) {
-            this.classes = JSON.parse(savedClasses);
-          }
-          if (savedSubjects) {
-            this.subjects = JSON.parse(savedSubjects);
-          }
-        }
-      },
-      mounted() {
-        this.loadData();
-      },
-        getSubjectsByClass(className) {
-    if (!className) return [];
-    return this.subjects.filter(subject => subject.className === className);
+const { createApp } = Vue;
+createApp({
+  data() {
+    return {
+      view: 'classes',
+      newClass: '',
+      newSubject: { name: '', className: '' },
+      classes: [],
+      subjects: [],
+      teachers: [
+        { name: 'Mr. Youssef Saadi', class: '', teachingSubjects: [] },
+        { name: 'Ms. Fatima Mourad', class: '', teachingSubjects: [] }
+      ],
+      students: [
+        { name: 'assil', class: '4A' },
+        { name: 'ahmed', class: '4B' }
+      ],
+      // Student features
+      showAddStudent: false,
+      newStudent: { name: '', class: '' },
+      editStudentIndex: null,
+      editStudentData: { name: '', class: '' },
+      studentSearch: '',
+      // Teacher features
+      showAddTeacher: false,
+      newTeacher: { name: '', class: '', teachingSubjects: [] },
+      editTeacherIndex: null,
+      editTeacherData: { name: '', class: '', teachingSubjects: [] }
+    };
   },
+  computed: {
+    filteredStudents() {
+      if (!this.studentSearch.trim()) return this.students;
+      const term = this.studentSearch.trim().toLowerCase();
+      return this.students.filter(s =>
+        s.name.toLowerCase().includes(term) ||
+        (s.class && s.class.toLowerCase().includes(term))
+      );
+    }
+  },
+  methods: {
+    // Student CRUD
+    getStudentIndex(student) {
+      return this.students.findIndex(s => s.name === student.name && s.class === student.class);
+    },
+    addStudent() {
+      const name = this.newStudent.name.trim();
+      const className = this.newStudent.class;
+      if (name && className) {
+        this.students.push({ name, class: className });
+        this.newStudent.name = '';
+        this.newStudent.class = '';
+        this.showAddStudent = false;
+        this.saveData();
+        alert('Student added');
+      }
+    },
+    editStudent(index) {
+      this.editStudentIndex = index;
+      this.editStudentData = { ...this.students[index] };
+    },
+    saveStudentEdit(index) {
+      if (this.editStudentData.name.trim() && this.editStudentData.class) {
+        this.students[index] = { ...this.editStudentData };
+        this.editStudentIndex = null;
+        this.editStudentData = { name: '', class: '' };
+        this.saveData();
+      }
+    },
+    cancelStudentEdit() {
+      this.editStudentIndex = null;
+      this.editStudentData = { name: '', class: '' };
+    },
+    deleteStudent(index) {
+      if (confirm('Are you sure you want to delete this student?')) {
+        this.students.splice(index, 1);
+        this.saveData();
+      }
+    },
 
-  saveTeachersClasses() {
-    alert('تم حفظ تعيينات الأساتذة للأقسام بنجاح!');
+    // Teacher CRUD
+    addTeacher() {
+      const name = this.newTeacher.name.trim();
+      const className = this.newTeacher.class;
+      if (name) {
+        this.teachers.push({
+          name,
+          class: className,
+          teachingSubjects: [...(this.newTeacher.teachingSubjects || [])]
+        });
+        this.newTeacher = { name: '', class: '', teachingSubjects: [] };
+        this.showAddTeacher = false;
+        this.saveData();
+        alert('Teacher added');
+      }
+    },
+    editTeacher(index) {
+      this.editTeacherIndex = index;
+      this.editTeacherData = {
+        name: this.teachers[index].name,
+        class: this.teachers[index].class,
+        teachingSubjects: [...(this.teachers[index].teachingSubjects || [])]
+      };
+    },
+    saveTeacherEdit(index) {
+      if (this.editTeacherData.name.trim()) {
+        this.teachers[index] = {
+          name: this.editTeacherData.name,
+          class: this.editTeacherData.class,
+          teachingSubjects: [...(this.editTeacherData.teachingSubjects || [])]
+        };
+        this.editTeacherIndex = null;
+        this.editTeacherData = { name: '', class: '', teachingSubjects: [] };
+        this.saveData();
+      }
+    },
+    cancelTeacherEdit() {
+      this.editTeacherIndex = null;
+      this.editTeacherData = { name: '', class: '', teachingSubjects: [] };
+    },
+    deleteTeacher(index) {
+      if (confirm('Are you sure you want to delete this teacher?')) {
+        this.teachers.splice(index, 1);
+        this.saveData();
+      }
+    },
+    toggleEditTeachingSubject(subjectName, isChecked) {
+      if (!this.editTeacherData.teachingSubjects) this.editTeacherData.teachingSubjects = [];
+      if (isChecked) {
+        if (!this.editTeacherData.teachingSubjects.includes(subjectName)) {
+          this.editTeacherData.teachingSubjects.push(subjectName);
+        }
+      } else {
+        const idx = this.editTeacherData.teachingSubjects.indexOf(subjectName);
+        if (idx !== -1) this.editTeacherData.teachingSubjects.splice(idx, 1);
+      }
+    },
+
+    // Export all data as JSON
+    exportData() {
+      const data = {
+        classes: this.classes,
+        subjects: this.subjects,
+        teachers: this.teachers,
+        students: this.students
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'school-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
+    // Import data from JSON file
+    importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.classes && data.subjects && data.teachers && data.students) {
+            this.classes = data.classes;
+            this.subjects = data.subjects;
+            this.teachers = data.teachers;
+            this.students = data.students;
+            this.saveData();
+            alert('Data imported successfully!');
+          } else {
+            alert('Invalid data file.');
+          }
+        } catch {
+          alert('Failed to import data.');
+        }
+      };
+      reader.readAsText(file);
+    },
+
+    // Reset all data
+    resetData() {
+      if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+        this.classes = [];
+        this.subjects = [];
+        this.teachers = [
+          { name: 'Mr. Youssef Saadi', class: '', teachingSubjects: [] },
+          { name: 'Ms. Fatima Mourad', class: '', teachingSubjects: [] }
+        ];
+        this.students = [];
+        this.saveData();
+        alert('All data has been reset.');
+      }
+    },
+
+    // Subjects by class
+    subjectsByClass(className) {
+      if (!className) return [];
+      return this.subjects.filter(s => s.className === className);
+    },
+    isTeacherTeachingSubject(tIndex, subjectName) {
+      const ts = this.teachers[tIndex].teachingSubjects || [];
+      return ts.includes(subjectName);
+    },
+    toggleTeachingSubject(tIndex, subjectName, isChecked) {
+      if (!this.teachers[tIndex].teachingSubjects) {
+        this.teachers[tIndex].teachingSubjects = [];
+      }
+      if (isChecked) {
+        if (!this.teachers[tIndex].teachingSubjects.includes(subjectName)) {
+          this.teachers[tIndex].teachingSubjects.push(subjectName);
+        }
+      } else {
+        const idx = this.teachers[tIndex].teachingSubjects.indexOf(subjectName);
+        if (idx !== -1) {
+          this.teachers[tIndex].teachingSubjects.splice(idx, 1);
+        }
+      }
+    },
+    addClass() {
+      const newC = this.newClass.trim();
+      if (newC && !this.classes.includes(newC)) {
+        this.classes.push(newC);
+        this.newClass = '';
+        this.saveData();
+        alert('Class added');
+      } else if (this.classes.includes(newC)) {
+        alert('This class already exists');
+      }
+    },
+    deleteClass(index) {
+      const removed = this.classes.splice(index, 1)[0];
+      this.subjects = this.subjects.filter(s => s.className !== removed);
+      this.teachers.forEach(teacher => {
+        if (teacher.class === removed) {
+          teacher.class = '';
+          teacher.teachingSubjects = [];
+        }
+      });
+      this.students.forEach(student => {
+        if (student.class === removed) student.class = '';
+      });
+      this.saveData();
+    },
+    addSubject() {
+      const name = this.newSubject.name.trim();
+      const className = this.newSubject.className;
+      if (name && className) {
+        this.subjects.push({ name, className });
+        this.newSubject.name = '';
+        this.newSubject.className = '';
+        this.saveData();
+        alert('Subject added');
+      }
+    },
+    deleteSubject(index) {
+      this.subjects.splice(index, 1);
+      this.saveData();
+    },
+    saveData() {
+      localStorage.setItem('classes', JSON.stringify(this.classes));
+      localStorage.setItem('subjects', JSON.stringify(this.subjects));
+      localStorage.setItem('teachers', JSON.stringify(this.teachers));
+      localStorage.setItem('students', JSON.stringify(this.students));
+    },
+    loadData() {
+      const savedClasses = localStorage.getItem('classes');
+      const savedSubjects = localStorage.getItem('subjects');
+      const savedTeachers = localStorage.getItem('teachers');
+      const savedStudents = localStorage.getItem('students');
+      if (savedClasses) this.classes = JSON.parse(savedClasses);
+      if (savedSubjects) this.subjects = JSON.parse(savedSubjects);
+      if (savedTeachers) this.teachers = JSON.parse(savedTeachers);
+      if (savedStudents) this.students = JSON.parse(savedStudents);
+    },
+    saveTeachersClassesAndSubjects() {
+      this.saveData();
+      alert('Teachers assignments saved successfully!');
+    },
+    saveStudentsClasses() {
+      this.saveData();
+      alert('Students assignments saved successfully!');
+    }
+  },
+  mounted() {
+    this.loadData();
   }
-    }).mount('#app');
-  </script>
+}).mount('#app');
+</script>
 </body>
 </html>
