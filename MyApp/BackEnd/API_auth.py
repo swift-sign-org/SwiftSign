@@ -5,7 +5,7 @@ import tempfile
 import logging
 
 from MyApp.BackEnd.Database.ProjectDatabase import db, Teacher, Student, Class, Subject
-from MyApp.AI_Integration.face_recognition import get_arcface_vector
+from MyApp.AI_Integration.face_recognition import get_arcface_vector,verify_faces_existance
 
 
 api_bp = blueprints.Blueprint('api', __name__)
@@ -172,8 +172,11 @@ def student_register_photo(student_id):
     try:
         data = request.get_json()
         photo_b64 = data.get('photo')
+        faces =verify_faces_existance(photo_b64)
         if not photo_b64:
             return jsonify({'message': 'Photo is required.'}), 400
+        if not faces:
+            return jsonify({'message':'No face or several faces detected'}),400
             
         student = Student.query.get(student_id)
         if not student:
