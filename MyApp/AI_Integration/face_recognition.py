@@ -3,8 +3,11 @@ from numpy import dot
 from numpy.linalg import norm
 import cv2
 
-def get_face_vector(image_path):
-    return None
+def verify_faces_existance(img_path):
+    faces=Dp.extract_faces(img_path)
+    if len(faces)==1:
+        return True
+    return False
 
 def compare_face_vectors(vec1, vec2):
     vec1 = vec1[0]['embedding']
