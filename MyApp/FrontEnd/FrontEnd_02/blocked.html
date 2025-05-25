@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Session Not Started</title>
   <link rel="icon" href="001.PNG" type="image/png">
+  <script src="vue.global.js"></script>
+
   
   <!-- Link to the external CSS file -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -29,8 +31,7 @@
         </div>
     </div>
   </section>
-
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="vue.global.js"></script>
   <script>
     new Vue({
       el: '#blockedApp',
