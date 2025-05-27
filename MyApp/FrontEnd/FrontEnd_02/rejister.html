@@ -323,41 +323,6 @@
             this.isSubmitting = false;
           }
         },
-        async uploadStudentPhoto(studentId) {
-          // This function is now obsolete as we're redirecting to the face registration page
-          // We'll keep it in case we need to revert, but it won't be called
-          const base64Data = this.form.picture.split(',')[1];
-          
-          try {
-            const response = await fetch(`/api/students/${studentId}/photo`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                photo: base64Data
-              })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-              this.message = 'Registration successful with photo!';
-              this.messageType = 'success';
-              
-              setTimeout(() => {
-                window.location.href = "/register/face";
-              }, 1500);
-            } else {
-              this.showErrorMessage(data.message || "Photo upload failed.");
-            }
-          } catch (error) {
-            console.error("Photo upload error:", error);
-            this.showErrorMessage("Registration completed but photo upload failed.");
-            
-            setTimeout(() => {
-              window.location.href = "/register/face";
-            }, 3000);
-          }
-        },
         async handleSubmit() {
           if (this.isSubmitting) return;
           
