@@ -131,10 +131,6 @@
   <!-- Hidden file input -->
   <input id="file-upload" type="file" ref="fileInput" @change="handleImageUpload" />
 
-  <!-- Update Picture Button -->
-  <button type="button" class="upload-btn" @click="triggerFileInput">📷 Update Picture</button>
-</div>
-
 <!-- Preview -->
 <div v-if="form.picture" style="text-align:center;">
   <img :src="form.picture" class="static-pic" />
