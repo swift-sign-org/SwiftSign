@@ -150,25 +150,25 @@
                         // redirect to the route /attendance
                         window.location.href = '/attendance';
                       }, 1200);
-                      // // After login, verify student is in the class for the current session
-                      // const sessionRes = await fetch('/api/attendance-sessions/current/students');
-                      // const sessionData = await sessionRes.json();
-                      // const found = sessionData.students && sessionData.students.some(s => s.email.toLowerCase() === emailTrimmed.toLowerCase());
+                      // After login, verify student is in the class for the current session
+                      const sessionRes = await fetch('/api/attendance-sessions/current/students');
+                      const sessionData = await sessionRes.json();
+                      const found = sessionData.students && sessionData.students.some(s => s.email.toLowerCase() === emailTrimmed.toLowerCase());
                       
-                      // if (!found) {
-                      //   this.showError("You are not in the class for the current attendance session.");
-                      //   return;
-                      // }
+                      if (!found) {
+                         this.showError("You are not in the class for the current attendance session.");
+                         return;
+                       }
                       
-                      // this.loginSuccess = true;
-                      // this.successMessage = data.message || 'Login Successful!';
-                      // this.email = '';
+                       this.loginSuccess = true;
+                       this.successMessage = data.message || 'Login Successful!';
+                       this.email = '';
                       
-                      // // Redirect after showing success message
-                      // setTimeout(() => {
-                      //   this.loginSuccess = false;
-                      //   window.location.href = this.redirectUrl;
-                      // }, 1200);
+                       // Redirect after showing success message
+                       setTimeout(() => {
+                         this.loginSuccess = false;
+                         window.location.href = this.redirectUrl;
+                       }, 1200);
                     }
                     // Handle error response
                     else {
